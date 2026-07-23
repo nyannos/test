@@ -3903,7 +3903,7 @@ Tabs.Settings:AddToggle({
     end
 })
 BusuAura = Tabs.Settings:AddToggle({
-Name = "Auto Turn on Buso", 
+Name = "Tự động cường hóa", 
 Description = "", 
 Default = true,
 Callback = function(Value)
@@ -3920,7 +3920,7 @@ spawn(function()
   end
 end)
 Tabs.Settings:AddToggle({
-    Name = "Auto Haki Observation",
+    Name = "Tự động bật haki quan sát",
     Default = false,
     Callback = function(Value)
         getgenv().Observation = Value
@@ -4211,10 +4211,10 @@ spawn(function()
   end
 end)
 
-Tabs.Fish:AddSection("Fishing")
+Tabs.Fish:AddSection("Câu cá")
 
 Tabs.Fish:AddDropdown({
-    Name = "Select Fishing Rod",
+    Name = "Chọn cần câu",
     Description = "",
     Options = {"Fishing Rod", "Gold Rod", "Shark Rod", "Shell Rod", "Treasure Rod"},
     Default = "Fishing Rod",
@@ -4224,7 +4224,7 @@ Tabs.Fish:AddDropdown({
 })
 
 BaitDropdown = Tabs.Fish:AddDropdown({
-    Name = "Select Bait",
+    Name = "Chọn mồi",
     Description = "",
     Options = {"Basic Bait", "Kelp Bait", "Good Bait", "Abyssal Bait", "Frozen Bait", "Epic Bait", "Carnivore Bait"},
     Default = "Basic Bait",
@@ -4239,7 +4239,7 @@ BaitDropdown = Tabs.Fish:AddDropdown({
 })
 
 BuyBaitToggle = Tabs.Fish:AddToggle({
-    Name = "Auto Buy Bait",
+    Name = "Tự động mua mồi",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -4267,7 +4267,7 @@ end)
 
 
 FishingToggle = Tabs.Fish:AddToggle({
-    Name = "Auto Fishing",
+    Name = "Tự động câu cá",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -4331,7 +4331,7 @@ end)
 
 
 FishingQ = Tabs.Fish:AddToggle({
-Name = "Auto Quest Fishing", 
+Name = "Tự động chấp nhận nhiệm vụ câu cá", 
 Description = "",
 Default = false,
 Callback = function(Value)
@@ -4366,7 +4366,7 @@ end)
 
 
 QuestToggle = Tabs.Fish:AddToggle({
-    Name = "Auto Complete Quest",
+    Name = "Tự động hoàn thành nhiệm vụ",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -4393,7 +4393,7 @@ end)
 
 
 SellFishToggle = Tabs.Fish:AddToggle({
-    Name = "Auto Sell Fish",
+    Name = "Tự động bán cá",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -4420,7 +4420,7 @@ end)
 
 
 SpamSkillZ = Tabs.Fish:AddToggle({
-Name = "Auto Spam Skill Z", 
+Name = "Tự động nhấn chiêu Z", 
 Description = "",
 Default = false,
 Callback = function(Value)
@@ -4442,7 +4442,7 @@ task.spawn(function()
 end)
 
 TravelDress = Tabs.Quests:AddToggle({
-Name = "Auto Quest Sea 2", 
+Name = "Tự động làm nhiệm vụ biển thứ hai", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4477,7 +4477,7 @@ spawn(function()
   end
 end)
 Zou = Tabs.Quests:AddToggle({
-Name = "Auto Quest Sea 3", 
+Name = "Tự động làm nhiệm vị biển thứ ba", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4590,10 +4590,10 @@ end)
 
 
 
-Tabs.Quests:AddSection("Tushita + Yama")
+Tabs.Quests:AddSection("Kiếm Tushita và Yama")
 
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Tushita Sword", 
+Name = "Tự động lấy kiếm Tushita", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4632,7 +4632,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Yama Sword", 
+Name = "Tự động lấy kiếm Yama", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4660,8 +4660,8 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Skull Guitars / Misc")
-local CheckSoul = Tabs.Quests:AddParagraph("Skull Guitar Quests", "")
+Tabs.Quests:AddSection("Đàn linh hồn / Linh tinh")
+local CheckSoul = Tabs.Quests:AddParagraph("Nhiệm vụ Đàn linh hồn", "")
 spawn(function()
     while wait(0.2) do
         pcall(function()
@@ -4682,7 +4682,7 @@ spawn(function()
     end
 end)
 Tabs.Quests:AddToggle({
-Name = "Auto Skull Guitar", 
+Name = "Lấy Đàn linh hồn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4859,7 +4859,7 @@ spawn(function()
   end
 end)
 Tabs.Quests:AddToggle({
-Name = "Auto Farm Material Skull Guitar", 
+Name = "Tự động cày nguyên liệu lấy đàn linh hồn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4907,8 +4907,8 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Cursed Dual Katana")
-local CheckCDK = Tabs.Quests:AddParagraph("Number Cursed dual katana quests", "Quest Numbers :")
+Tabs.Quests:AddSection("Sống đao nguyền rủa")
+local CheckCDK = Tabs.Quests:AddParagraph("Số nhiệm vụ song kiếm katana bị nguyền rủa", "Số nhiệm vụ :")
 spawn(function()  
     while wait(0.2) do 
         if QuestYama_1 == true then 
@@ -4927,7 +4927,7 @@ spawn(function()
     end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Get CDK [ Last Quest ]", 
+Name = "Tự động lấy song đao nguyền rủa [ Nhiệm vụ cuối cùng ]", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4956,7 +4956,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Yama CDK", 
+Name = "Tự động làm nhiệm vụ Yama", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5094,7 +5094,7 @@ spawn(function()
 end)
 
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Tushita CDK", 
+Name = "Tự động làm nhiệm vụ Tushita", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5211,9 +5211,9 @@ spawn(function()
     end)
   end
 end)
-Tabs.Quests:AddSection("True Triple Katana Sword")
+Tabs.Quests:AddSection("Tam bảo kiếm")
 Tabs.Quests:AddButton({
-Name = "Buy Legendary Sword",
+Name = "Mua kiếm huyền thoại",
 Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("LegendarySwordDealer","1")
@@ -5221,13 +5221,13 @@ Callback = function()
   replicated.Remotes.CommF_:InvokeServer("LegendarySwordDealer","3")
 end})
 Tabs.Quests:AddButton({
-Name = "Buy True Triple Katana Sword", 
+Name = "Mua Tam bảo kiếm", 
 Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("MysteriousMan","2")
 end})
 Q = Tabs.Quests:AddToggle({
-Name = "Tween to Legendary Sword Dealer", 
+Name = "Bay đến người bán kiếm huyền thoại", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5245,9 +5245,9 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Pole / God Enal's")
+Tabs.Quests:AddSection("Lôi gậy")
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Pole V1", 
+Name = "Lấy Lôi gậy thể một", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5268,7 +5268,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Pole V2 [Beta]", 
+Name = "Lấy Lôi gậy thể hai [Thử nghiệm]", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5302,7 +5302,7 @@ spawn(function()
   end
 end)
 Tabs.Quests:AddToggle({
-Name = "Auto Saw Sword", 
+Name = "Lấy cưa cá mập", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5322,7 +5322,7 @@ spawn(function()
 end)
 
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Saber Sword", 
+Name = "Lấy kiếm Saber", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5405,7 +5405,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Cybrog", 
+Name = "Lấy tộc người máy", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5424,7 +5424,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Usoap's Hat", 
+Name = "Lấy mũ Usoap's", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5446,7 +5446,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Bisento V2", 
+Name = "Lấy đại đao Bisento V2", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5470,7 +5470,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Warden Sword", 
+Name = "Tự động lấy kiếm quản ngục", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5489,7 +5489,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Marine Coat", 
+Name = "Tự động lấy mũ hải quân", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5508,7 +5508,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Swan Coat", 
+Name = "Tự động lấy áo choàng hồng", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5527,9 +5527,9 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Rengoku Sword")
+Tabs.Quests:AddSection("Kiếm Rengoku")
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Rengoku Sword", 
+Name = "Tự động lấy kiếm Rengoku", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5548,7 +5548,7 @@ spawn(function()
   end)
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Key Rengoku", 
+Name = "Tự động lấy chìa khóa ẩn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5572,7 +5572,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Dragon Trident", 
+Name = "Tự động lấy đinh ba rồng", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5591,7 +5591,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Long Sword", 
+Name = "Tự động lấy kiếm dài", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5610,7 +5610,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Black Spikey", 
+Name = "Tự động lấy áo choàng gái đen", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5629,7 +5629,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Dark Blade V3", 
+Name = "Lấy hắc kiếm v3", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5655,7 +5655,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Midnight Blade", 
+Name = "Tự động lấy bán dạ kiếm", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5680,7 +5680,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Darkbeard", 
+Name = "Tự động đánh Râu đen", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5703,7 +5703,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Unlocked DonSwan", 
+Name = "Tự động mở khoá cửa Donswan", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5753,7 +5753,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Swan Glasses", 
+Name = "Tự động lấy Kính thiên nga", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5772,9 +5772,9 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Cavender + Twin Hooks + Bigmom")
+Tabs.Quests:AddSection("Kiếm Cavender + Song móc + Mẹ lớn")
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Bigmom", 
+Name = "Tự động đánh Mẹ lớn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5793,7 +5793,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Canvendish Sword", 
+Name = "Tự động lấy kiếm Canvendish", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5812,7 +5812,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Twin Hooks", 
+Name = "Tự động lấy Song móc", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5833,7 +5833,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Serpent Bow", 
+Name = "Tự động lấy Cung mãng xà", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5850,7 +5850,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Lei Accessory", 
+Name = "Tự động lấy Vòng hoa", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5869,9 +5869,9 @@ spawn(function()
   end
 end)
 
-Tabs.Quests:AddSection("Buso/Aura Colours")
+Tabs.Quests:AddSection("Màu sắc haki")
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Teleport Barista Cousin", 
+Name = "Tự động bay đến Barista Cousin", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5889,13 +5889,13 @@ spawn(function()
   end
 end)
 Tabs.Quests:AddButton({
-Name = "Buy Buso Colors", 
+Name = "Tự động mua haki màu", 
 Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("ColorsDealer","2")
 end})
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Rainbow Colors", 
+Name = "Tự động lấy haki bảy màu", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -5967,16 +5967,16 @@ spawn(function()
   end)
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Accept Rainbow Quest Faster", 
+Name = "Tự động làm nhiệm vụ haki bảy màu nhanh hơn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
   _G.GetQFast = Value
 end})
 
-Tabs.Quests:AddSection("Instinct / Observation")
+Tabs.Quests:AddSection("Quan sát")
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Farm Observation", 
+Name = "Tự động cày haki quan sát", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6049,7 +6049,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Observation V2", 
+Name = "Tự động lấy haki quan sát V2", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6133,7 +6133,7 @@ end)
 
 
 Bartilo = Tabs.Quests:AddToggle({
-Name = "Auto Done Bartilo Quest", 
+Name = "Tự động hoàn thành nhiệm vụ Bartilo", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6200,7 +6200,7 @@ spawn(function()
   end
 end)
 CitizenQ = Tabs.Quests:AddToggle({
-Name = "Auto Done Citizen Quest", 
+Name = "Tự động hoàn thành nhiệm vụ Citizen", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6247,7 +6247,7 @@ spawn(function()
   end
 end)
 Q = Tabs.Quests:AddToggle({
-Name = "Auto Training Dummy", 
+Name = "Tự động đánh Dummy", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6278,9 +6278,9 @@ end)
 
 
 
-Tabs.Quests:AddSection("Fighting Melee Styles")
+Tabs.Quests:AddSection("Phong cách chiến đấu / Võ")
 SuperHuman = Tabs.Quests:AddToggle({
-Name = "Auto Superhuman", 
+Name = "Tự động lấy Thượng nhân quyền", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6314,7 +6314,7 @@ spawn(function()
   end
 end)
 DeathStep = Tabs.Quests:AddToggle({
-Name = "Auto DeathStep", 
+Name = "Tự động lấy Tử cước", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6347,7 +6347,7 @@ spawn(function()
   end
 end)
 SharkManV2 = Tabs.Quests:AddToggle({
-Name = "Auto Sharkman Karate", 
+Name = "Tự động lấy Võ cá V2", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6383,7 +6383,7 @@ spawn(function()
   end
 end)
 ElectricClaw = Tabs.Quests:AddToggle({
-Name = "Auto ElectricClaw", 
+Name = "Tự động lấy Vuốt điện", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6407,7 +6407,7 @@ spawn(function()
   end
 end)
 DragonTalon = Tabs.Quests:AddToggle({
-Name = "Auto DragonTalon", 
+Name = "Tự động lấy Long trảo", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6428,7 +6428,7 @@ spawn(function()
   end
 end)
 Godhuman = Tabs.Quests:AddToggle({
-Name = "Auto Godhuman", 
+Name = "Tự động lấy Thần diệt quyền", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6478,7 +6478,7 @@ spawn(function()
   end
 end)
 SanguineArt = Tabs.Quests:AddToggle({
-Name = "Auto SanguineArt", 
+Name = "Tự động lấy Huyết quỷ thuật", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6531,9 +6531,9 @@ end)
 
 
 
-Tabs.Race:AddSection("Mystic Island / Full Moon")
-local FullMOOn = Tabs.Race:AddParagraph("FullMoon Status", "")
-local Ismirage = Tabs.Race:AddParagraph("Mirage Island Status", "")
+Tabs.Race:AddSection("Đảo bí ẩn / Trăng tròn")
+local FullMOOn = Tabs.Race:AddParagraph("Trạng thái Trăng tròn", "")
+local Ismirage = Tabs.Race:AddParagraph("Trạng thái Đảo bí ẩn", "")
 spawn(function()
     while wait(0.2) do
         if workspace.Map:FindFirstChild("MysticIsland") or workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island") then
@@ -6577,7 +6577,7 @@ spawn(function()
     end
 end)
 Tabs.Race:AddToggle({
-Name = "Auto Find Mirage Island", 
+Name = "Tự động bay đến Đảo bí ẩn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6616,7 +6616,7 @@ spawn(function()
   end
 end)
 Tabs.Race:AddToggle({
-    Name = "Esp Mirage Island",
+    Name = "Hiển thị Đảo bí ẩn",
     Description = "",
     Value = false,
     Callback = function(Value)
@@ -6634,7 +6634,7 @@ Tabs.Race:AddToggle({
     end
 })
 Tabs.Race:AddToggle({
-    Name = "Auto Tween To Mirage Island",
+    Name = "Hiệu ứng chuyển cảnh tự động đến Đảo Ảo Ảnh",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -6656,7 +6656,7 @@ spawn(function()
     end
 end)
 Tabs.Race:AddToggle({
-Name = "Auto Tween To Highest Point", 
+Name = "Tự động bay đến điểm cao nhất trên Đảo bí ẩn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6672,7 +6672,7 @@ spawn(function()
   end
 end)
 Tabs.Race:AddToggle({
-Name = "Auto Collect Gear", 
+Name = "Tự động nhặt bánh răng", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6692,7 +6692,7 @@ spawn(function()
   end)
 end)
 Tabs.Race:AddToggle({
-Name = "Change Transparency can see", 
+Name = "Change Transparent có thể thấy", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6716,7 +6716,7 @@ spawn(function()
   end)
 end)
 Tabs.Race:AddToggle({
-Name = "Auto Tween Advanced Fruit Dealer", 
+Name = "Bay đến người bán trái đặc biệt", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6734,7 +6734,7 @@ spawn(function()
   end
 end)
 Tabs.Race:AddToggle({
-Name = "Auto Collect Mirage Chest", 
+Name = "Tự động nhặt rương trên Đảo bí ẩn", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -6772,7 +6772,7 @@ end)
 
 
 Tabs.Race:AddButton({
-Name = "Talk With Stone", 
+Name = "Nói chuyện với Tảng đá", 
 Description = "",
 Callback = function()
   replicated:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("RaceV4Progress","Begin")
@@ -11993,8 +11993,8 @@ end
 StartMainLoops()
 
 Window:Notify({
-  Title = "OK Hub",
-  Content = "OK hub da comeback",
-  Image = "rbxassetid://127632820302449",
+  Title = "nyann os",
+  Content = "Load...",
+  Image = "rbxassetid://94678517792779",
   Duration = 5
 })
