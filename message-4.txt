@@ -1315,9 +1315,9 @@ end
 
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
 local Window = redzlib:MakeWindow({
-    Title = "Tay Hub ",
-    SubTitle = "by @tungdepzai",
-    SaveFolder = "taynaiget.json"
+    Title = "nyann os",
+    SubTitle = "by real_@nyann",
+    SaveFolder = "nyannnaiget.json"
 })
 
 local Minimizer = Window:NewMinimizer({
@@ -1325,7 +1325,7 @@ local Minimizer = Window:NewMinimizer({
 })
 
 local MobileButton = Minimizer:CreateMobileMinimizer({
-  Image = "rbxassetid://96454140798208",
+  Image = "rbxassetid://94678517792779",
   BackgroundColor3 = Color3.fromRGB(0, 255, 254)
 })
 
@@ -1350,17 +1350,15 @@ local Tabs = {
 Tabs.Info:AddSection("Information")
 
 Tabs.Info:AddDiscordInvite({
-	Title = "Tay hub | Community",
-	Description = "A community for Tay hub Users - official scripts, updates, and suport in one place.",
-	Banner = "rbxassetid://96454140798208", 
-	Logo = "rbxassetid://96454140798208",
+	Title = "nyann | Community",
+	Description = "A community for nyann os Users - official scripts, updates, and suport in one place.",
+	Banner = "rbxassetid://94678517792779", 
+	Logo = "rbxassetid://94678517792779",
 	Invite = "https://discord.gg/75HaB35ymY",
 	Members = 3600000, 
 	Online = 3200, 
 })
 Tabs.Info:AddSection("Status Server")
-
-Tabs.Font:AddSection("Server Browser")
 
 -- ==========================================
 -- PHẦN CHỌN FONT (thêm vào tab Font)
