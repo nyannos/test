@@ -1330,21 +1330,21 @@ local MobileButton = Minimizer:CreateMobileMinimizer({
 })
 
 local Tabs = {
-    Info = Window:MakeTab({ Title = "Tab Info And Status", Icon = "Info" }),
-    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
-    Font = Window:MakeTab({ Title = "Tab Font", Icon = "locate" }),
-    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
-    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = "Tab Volcano Event", Icon = "tent" }),
-    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = "Tab Teleport", Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
-    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
+    Info = Window:MakeTab({ Title = "Info And Status", Icon = "rbxassetid://112173305232811" }),
+    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://112173305232811" }),
+    Font = Window:MakeTab({ Title = "Font", Icon = "locate" }),
+    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://1121733052328115" }),
+    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://112173305232811" }),
+    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://112173305232811" }),
+    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "rbxassetid://112173305232811" }),
+    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://112173305232811" }),
+    Prehistoric = Window:MakeTab({ Title = "Volcano Event", Icon = "rbxassetid://112173305232811" }),
+    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://112173305232811" }),
+    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://112173305232811" }),
+    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://112173305232811" }),
+    Travel = Window:MakeTab({ Title = "Teleport", Icon = "rbxassetid://112173305232811" }),
+    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://1121733052328116" }),
+    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://112173305232811" })
 }
 
 Tabs.Info:AddSection("Information")
@@ -12045,8 +12045,8 @@ end
 StartMainLoops()
 
 Window:Notify({
-  Title = "Tay hub",
-  Content = "Tay hub da comeback",
-  Image = "rbxassetid://96454140798208",
+  Title = "nyann os",
+  Content = "Load...",
+  Image = "rbxassetid://94678517792779",
   Duration = 5
 })
