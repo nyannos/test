@@ -704,17 +704,17 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Size = UDim2.new(0, 55, 0, 55)
-ToggleButton.Position = UDim2.new(0.15, 0, 0.15, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30,30,30) -- nền cho tròn rõ
+ToggleButton.Position = UDim2.new(0, 10, 1, -65) -- góc dưới bên trái
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
 ToggleButton.BackgroundTransparency = 0
 ToggleButton.BorderSizePixel = 0
 ToggleButton.Image = "rbxassetid://86224472741926"
-ToggleButton.ScaleType = Enum.ScaleType.Crop -- FIX TRÒN CHUẨN
+ToggleButton.ScaleType = Enum.ScaleType.Crop
 ToggleButton.Parent = ScreenGui
 
--- bo tròn chuẩn 45x45
+-- bo tròn
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(1, 0) -- full tròn
+Corner.CornerRadius = UDim.new(1, 0)
 Corner.Parent = ToggleButton
 
 -- CLICK
@@ -723,7 +723,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.End, false, game)
 end)
 
--- DRAG FIX MƯỢT
+-- DRAG
 local dragging = false
 local dragStart, startPos
 
@@ -757,12 +757,19 @@ UserInputService.InputEnded:Connect(function(input)
         dragging = false
     end
 end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
 local Tabs = {
   Info = Window:AddTab({Title = "Information", Icon = "info"}),
   Shop = Window:AddTab({Title = "Shop", Icon = "shopping-cart"}),
   Combat = Window:AddTab({Title = "Player", Icon = "user"}),
   Settings = Window:AddTab({Title = "Setting", Icon = "rbxassetid://7734053495"}),
-  Main = Window:AddTab({Title = "Cày", Icon = "home"}),
+  Main = Window:AddTab({Title = "Home", Icon = "home"}),
   Melee = Window:AddTab({Title = "Fighting style", Icon = "rbxassetid://11162889532"}),
   Quests = Window:AddTab({Title = "Item", Icon = "rbxassetid://13075622619"}),
   SeaEvent = Window:AddTab({Title = "Sea", Icon = "rbxassetid://10709783577"}),
@@ -780,9 +787,9 @@ local DiscordSection = Tabs.Info:AddSection("Discord")
 
 Tabs.Info:AddButton({
     Title = "Discord",
-    Description = "nYaNn community",
+    Description = "https://discord.gg/3zuHDZCybR",
     Callback = function()
-        setclipboard("https://discord.gg/q2qzCDBcG")
+        setclipboard("")
         Fluent:Notify({
             Title = "Copied!",
             Content = "Đã sao chép link Discord!",
@@ -794,7 +801,7 @@ Tabs.Info:AddButton({
 -- Thêm thông tin server
 Tabs.Info:AddParagraph({
     Title = "Server",
-    Content = "nYaNn Community"
+    Content = "https://discord.gg/3zuHDZCybR"
 })
  
 local FarmLevel = Tabs.Main:AddToggle("FarmLevel", {Title = "Auto Farm Level", Description = "", Default = false})
