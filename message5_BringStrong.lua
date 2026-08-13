@@ -1,4 +1,3 @@
-loadstring(game:HttpGet("https://pastefy.app/Dvag9ZyX/raw"))()
 do
   ply = game.Players
   plr = ply.LocalPlayer
