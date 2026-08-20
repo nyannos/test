@@ -1,4 +1,5 @@
 loadstring(game:HttpGet("https://pastefy.app/mGaFwtTa/raw"))()
+loadstring(game:HttpGet("https://pastefy.app/lpZF8Let/raw"))()
 local Services = setmetatable({}, {
     __index = function(self, serviceName)
         local service = game:GetService(serviceName)
@@ -3020,7 +3021,7 @@ local v14 = Window:MakeTab({
     Icon = "shopping-cart"
 })
 local v15 = Window:MakeTab({
-    Title = "Misc",
+    Title = "Miscellaneous",
     Icon = "settings-2"
 })
 local Miragecheck = v1:AddParagraph({
@@ -3033,7 +3034,7 @@ Discord:AddParagraph({
 })
 Discord:AddParagraph({
     "Những thứ đã update",
-    "Thêm phần hiển thị fps, hết rồi xem làm gì nữa"
+    "Thêm phần hiển thị fps,thêm phần tìm kiếm, hết rồi xem làm gì nữa."
 })
 Discord:AddDiscordInvite({
     Name = "nyann | Community👑",
@@ -3049,7 +3050,7 @@ Discord:AddDiscordInvite({
 })
 Discord:AddDiscordInvite({
     Name = "Facebook",
-    Description = "Theo dõi để nhận đc thôi báo mới nhất!",
+    Description = "Theo dõi để nhận đc thông báo mới nhất!",
     Logo = "rbxassetid://94678517792779",
     Invite = "https://www.facebook.com/share/1MFxSYvpAS/"
 })
