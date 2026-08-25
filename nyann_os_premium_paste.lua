@@ -190,18 +190,26 @@ end
 local StatusTime
 pcall(function()
     StatusTime = TabMain:AddParagraph({
-        Title = "Thời gian",
+        Title = "Thời gian thực",
         Description = FormatTime(),
     })
 end)
+-- Cập nhật thời gian realtime mỗi 0.25s
 task.spawn(function()
-    while task.wait(1) do
+    local last = ""
+    while task.wait(0.25) do
         pcall(function()
             local text = FormatTime()
-            if StatusTime and StatusTime.SetDesc then
-                StatusTime:SetDesc(text)
-            elseif StatusTime and StatusTime.SetDescription then
-                StatusTime:SetDescription(text)
+            if text == last then return end
+            last = text
+            if StatusTime then
+                if StatusTime.SetDesc then
+                    StatusTime:SetDesc(text)
+                elseif StatusTime.SetDescription then
+                    StatusTime:SetDescription(text)
+                elseif StatusTime.Set then
+                    StatusTime:Set(text)
+                end
             end
         end)
     end
@@ -943,6 +951,89 @@ Tab17:AddButton({
     Callback = function()
         loadstring(game:HttpGet("https://pastebin.com/raw/7nqF3CKH"))()
     end
+})
+
+-- ===================== SETTING =====================
+TabMisc:AddSection("Display")
+
+TabMisc:AddToggle({
+    Name = "Full Bright",
+    Default = false,
+    Callback = function(on)
+        pcall(function()
+            local Lighting = game:GetService("Lighting")
+            if on then
+                Lighting.Brightness = 2
+                Lighting.Ambient = Color3.new(1, 1, 1)
+                Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+                Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+                Lighting.FogEnd = 9e9
+                Lighting.GlobalShadows = false
+            else
+                Lighting.Brightness = 1
+                Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+                Lighting.ColorShift_Bottom = Color3.new(0, 0, 0)
+                Lighting.ColorShift_Top = Color3.new(0, 0, 0)
+                Lighting.FogEnd = 100000
+                Lighting.GlobalShadows = true
+            end
+        end)
+    end,
+})
+
+TabMisc:AddToggle({
+    Name = "No Animation",
+    Default = false,
+    Callback = function(on)
+        pcall(function()
+            local function strip(char)
+                if not char then return end
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local animator = hum:FindFirstChildOfClass("Animator")
+                    if animator then
+                        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                            pcall(function() track:Stop(0) end)
+                        end
+                    end
+                end
+                local animate = char:FindFirstChild("Animate")
+                if animate then
+                    animate.Disabled = on
+                end
+            end
+
+            if on then
+                strip(game.Players.LocalPlayer.Character)
+                -- stop new animations continuously
+                if _G.__NyannNoAnim then
+                    pcall(function() _G.__NyannNoAnim:Disconnect() end)
+                end
+                _G.__NyannNoAnim = game:GetService("RunService").Heartbeat:Connect(function()
+                    local char = game.Players.LocalPlayer.Character
+                    if not char then return end
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if not hum then return end
+                    local animator = hum:FindFirstChildOfClass("Animator")
+                    if animator then
+                        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                            pcall(function() track:Stop(0) end)
+                        end
+                    end
+                end)
+            else
+                if _G.__NyannNoAnim then
+                    pcall(function() _G.__NyannNoAnim:Disconnect() end)
+                    _G.__NyannNoAnim = nil
+                end
+                local char = game.Players.LocalPlayer.Character
+                if char then
+                    local animate = char:FindFirstChild("Animate")
+                    if animate then animate.Disabled = false end
+                end
+            end
+        end)
+    end,
 })
 
 -- ===================== DONE =====================
