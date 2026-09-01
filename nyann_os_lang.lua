@@ -364,7 +364,16 @@ local CollectionService = Services.CollectionService
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local player = Players.LocalPlayer
-local commE = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE")
+local commE
+pcall(function()
+    local remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+    if remotes then
+        commE = remotes:WaitForChild("CommE", 5)
+    end
+end)
+if not commE then
+    warn("[nyann os] CommE not found (timeout) — continue without AutoKen remote")
+end
 
 _G.AutoKen = true
 
@@ -376,7 +385,7 @@ end
 task.spawn(function()
     while _G.AutoKen do
         task.wait(0.2)
-        if not HasKen() then
+        if commE and not HasKen() then
             pcall(function()
                 commE:FireServer("Ken", true)
             end)
@@ -411,8 +420,13 @@ do
     ply = Services.Players
     plr = ply.LocalPlayer
     if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
-        plr.CharacterAdded:Wait()
-        plr.Character:WaitForChild("HumanoidRootPart", 15)
+        local okChar = pcall(function()
+            local ch = plr.Character or plr.CharacterAdded:Wait()
+            if ch then ch:WaitForChild("HumanoidRootPart", 10) end
+        end)
+        if not okChar then
+            warn("[nyann os] Character wait failed — continue")
+        end
     end
     pcall(function()
         plr:WaitForChild("Data", 15)
@@ -465,12 +479,18 @@ pcall(function()
     end
 end)
 
--- Wait for game to load
-repeat
-    local loading = plr.PlayerGui:FindFirstChild("Main")
-    loading = loading and loading:FindFirstChild("Loading")
-    task.wait()
-until game:IsLoaded() and not (loading and loading.Visible)
+-- Wait for game to load (max ~20s, không treo vô hạn)
+do
+    local t0 = tick()
+    repeat
+        local loading = plr.PlayerGui and plr.PlayerGui:FindFirstChild("Main")
+        loading = loading and loading:FindFirstChild("Loading")
+        task.wait(0.1)
+    until (game:IsLoaded() and not (loading and loading.Visible)) or (tick() - t0 > 20)
+    if tick() - t0 > 20 then
+        warn("[nyann os] Loading timeout — continue anyway")
+    end
+end
 
 -- World Detection (Optimized)
 local placeId = game.PlaceId
@@ -2975,13 +2995,63 @@ local function performClick()
     getgenv().AutoClickShootSettings.LastClickTime = currentTime
 end
 
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/redzlib_with_search-1.lua"))()
-local Window = redzlib:MakeWindow({
-    Title = "nyann os [Beta]",
-    SubTitle = "Blox fruit | by real_@nyann",
-    SaveFolder = true,
-    Image = "82107905019656"
-})
+local redzlib
+do
+    local urls = {
+        "https://raw.githubusercontent.com/nyannos/test/refs/heads/main/redzlib_with_search-1.lua",
+        "https://raw.githubusercontent.com/id202azh/id_905/refs/heads/main/raw%20(1).txt",
+    }
+    for _, url in ipairs(urls) do
+        local ok, result = pcall(function()
+            local src = game:HttpGet(url)
+            if type(src) ~= "string" or #src < 200 then error("empty lib") end
+            local fn, err = loadstring(src)
+            if not fn then error(err or "compile") end
+            return fn()
+        end)
+        if ok and result then
+            redzlib = result
+            print("[nyann os] Redz loaded:", url)
+            break
+        else
+            warn("[nyann os] Redz fail:", url, result)
+        end
+    end
+    if not redzlib then
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "nyann os",
+                Text = "Không tải được Redz Library — menu không hiện",
+                Duration = 10
+            })
+        end)
+        error("[nyann os] Cannot load Redz Library")
+    end
+end
+
+local Window
+do
+    local ok, result = pcall(function()
+        return redzlib:MakeWindow({
+            Title = "nyann os [Beta]",
+            SubTitle = "Blox fruit | by real_@nyann",
+            SaveFolder = true,
+            Image = "82107905019656"
+        })
+    end)
+    if not ok or not result then
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "nyann os",
+                Text = "MakeWindow lỗi: " .. tostring(result),
+                Duration = 10
+            })
+        end)
+        error("[nyann os] MakeWindow failed: " .. tostring(result))
+    end
+    Window = result
+    print("[nyann os] Menu Window OK")
+end
 -- Tạo nút bấm bằng hàm gốc của thư viện (100% không lỗi ẩn/hiện)
 local MinimizeButton = Window:AddMinimizeButton({
     Button = { 
