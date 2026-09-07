@@ -2851,7 +2851,7 @@ local function performClick()
     getgenv().AutoClickShootSettings.LastClickTime = currentTime
 end
 
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui/refs/heads/main/RedzMod_nen_den.lua"))()
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/redzlib_with_search-1.lua"))()
 local Window = redzlib:MakeWindow({
     Title = "nyann os [Beta] Free No Key",
     SubTitle = "Blox fruit | by real_@nyann",
