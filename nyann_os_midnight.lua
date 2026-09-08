@@ -1353,10 +1353,12 @@ end
 -- ========================================
 -- MIDNIGHT HUB LIBRARY + shim Redz API (giữ full Tabs.*)
 -- ========================================
-print("[nyann os] loading Midnight UI...")
+print("[nyann os] loading Source_white UI...")
 local MidnightLib
 do
   local urls = {
+    "https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Source_white.lua",
+    -- fallback nếu host die
     "https://raw.githubusercontent.com/NIcoGabrielRealYtr/Midnight-Hub-Library/refs/heads/main/Source",
   }
   for _, url in ipairs(urls) do
@@ -1369,16 +1371,28 @@ do
     end)
     if ok and res then
       MidnightLib = res
-      print("[nyann os] Midnight OK")
+      print("[nyann os] UI lib OK:", url)
       break
     else
-      warn("[nyann os] Midnight fail", res)
+      warn("[nyann os] UI lib fail:", url, res)
     end
   end
   if not MidnightLib then
-    error("[nyann os] Cannot load Midnight Library")
+    error("[nyann os] Cannot load UI library (Source_white)")
   end
 end
+
+-- Ép accent trắng (an toàn nếu file remote còn vàng)
+pcall(function()
+  if MidnightLib.Theme then
+    MidnightLib.Theme["Accent"] = Color3.fromRGB(255, 255, 255)
+    MidnightLib.Theme["Light Accent"] = Color3.fromRGB(220, 220, 220)
+  end
+  if MidnightLib.Themes and MidnightLib.Themes.Default then
+    MidnightLib.Themes.Default["Accent"] = Color3.fromRGB(255, 255, 255)
+    MidnightLib.Themes.Default["Light Accent"] = Color3.fromRGB(220, 220, 220)
+  end
+end)
 
 local RealWindow = MidnightLib:Window({
   Name = "nyann os [Beta] No Key",
@@ -1578,7 +1592,7 @@ task.defer(function()
   pcall(function()
     if RealWindow.SetOpen then RealWindow:SetOpen(true) end
   end)
-  print("[nyann os] Midnight menu visible")
+  print("[nyann os] Source_white menu visible")
 end)
 
 
