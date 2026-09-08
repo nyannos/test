@@ -1393,7 +1393,7 @@ end)
 local RealWindow = Library:Window({
   Prefix = "nyann",
   Suffix = "os",
-  Size = UDim2.fromOffset(720, 540), -- bigger menu
+  Size = UDim2.fromOffset(700, 460), -- wider but shorter
 })
 
 -- Side alternator for two-column layout
