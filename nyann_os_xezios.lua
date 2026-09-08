@@ -1393,7 +1393,7 @@ end)
 local RealWindow = Library:Window({
   Prefix = "nyann",
   Suffix = "os",
-  Size = UDim2.fromOffset(620, 471),
+  Size = UDim2.fromOffset(720, 540), -- bigger menu
 })
 
 -- Side alternator for two-column layout
@@ -1618,11 +1618,128 @@ local redzlib = {
   Notify = function(_, opts) Window:Notify(opts) end
 }
 
-local Minimizer = Window:NewMinimizer({ KeyCode = Enum.KeyCode.LeftControl })
-local MobileButton = Minimizer:CreateMobileMinimizer({
-  Image = "rbxassetid://94678517792779",
-  BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-})
+-- ========================================
+-- MINIMIZE ICON (toggle menu) - rbxassetid://94678517792779
+-- ========================================
+local MenuVisible = true
+local function ToggleXeziosMenu(force)
+  if force ~= nil then
+    MenuVisible = force
+  else
+    MenuVisible = not MenuVisible
+  end
+  pcall(function()
+    if RealWindow and RealWindow.ToggleMenu then
+      RealWindow.ToggleMenu(MenuVisible)
+    elseif RealWindow and RealWindow.Items and RealWindow.Items.Window then
+      RealWindow.Items.Window.Visible = MenuVisible
+    end
+  end)
+  -- also toggle Library.Items ScreenGui if present
+  pcall(function()
+    if Library and Library.Items then
+      Library.Items.Enabled = MenuVisible
+    end
+  end)
+end
+
+do
+  local CoreGui = game:GetService("CoreGui")
+  local UIS = game:GetService("UserInputService")
+
+  local sg = Instance.new("ScreenGui")
+  sg.Name = "NyannMinimizeIcon"
+  sg.ResetOnSpawn = false
+  sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+  sg.DisplayOrder = 999
+  pcall(function() sg.Parent = CoreGui end)
+  if not sg.Parent then
+    pcall(function() sg.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end)
+  end
+
+  local btn = Instance.new("ImageButton")
+  btn.Name = "MinimizeBtn"
+  btn.Size = UDim2.new(0, 48, 0, 48) -- slightly bigger icon
+  btn.Position = UDim2.new(0.08, 0, 0.35, 0)
+  btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+  btn.BackgroundTransparency = 0
+  btn.BorderSizePixel = 0
+  btn.Image = "rbxassetid://94678517792779"
+  btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+  btn.ScaleType = Enum.ScaleType.Fit
+  btn.Parent = sg
+
+  local corner = Instance.new("UICorner")
+  corner.CornerRadius = UDim.new(1, 0) -- full circle
+  corner.Parent = btn
+
+  local stroke = Instance.new("UIStroke")
+  stroke.Color = Color3.fromRGB(255, 255, 255) -- white border
+  stroke.Thickness = 1.5
+  stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+  stroke.Parent = btn
+
+  -- Drag
+  local dragging, dragStart, startPos, dragInput
+  local function update(input)
+    local delta = input.Position - dragStart
+    btn.Position = UDim2.new(
+      startPos.X.Scale, startPos.X.Offset + delta.X,
+      startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+  end
+
+  btn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+      or input.UserInputType == Enum.UserInputType.Touch then
+      dragging = true
+      dragStart = input.Position
+      startPos = btn.Position
+      input.Changed:Connect(function()
+        if input.UserInputState == Enum.UserInputState.End then
+          dragging = false
+        end
+      end)
+    end
+  end)
+
+  btn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+      or input.UserInputType == Enum.UserInputType.Touch then
+      dragInput = input
+    end
+  end)
+
+  UIS.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+      update(input)
+    end
+  end)
+
+  -- Click = toggle menu (ignore if dragged a lot)
+  local clickPos
+  btn.MouseButton1Down:Connect(function()
+    clickPos = UIS:GetMouseLocation()
+  end)
+  btn.MouseButton1Click:Connect(function()
+    local now = UIS:GetMouseLocation()
+    if clickPos and (now - clickPos).Magnitude > 12 then
+      return -- was a drag
+    end
+    ToggleXeziosMenu()
+  end)
+
+  -- LeftControl also toggles
+  UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+      ToggleXeziosMenu()
+    end
+  end)
+
+  getgenv().NyannToggleMenu = ToggleXeziosMenu
+  print("[nyann os] Minimize icon ready")
+end
 
 print("[nyann os] Xezios menu ready")
 
