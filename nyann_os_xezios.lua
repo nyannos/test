@@ -1510,11 +1510,17 @@ local function MakeTabShim(page)
 
   local tab = {}
 
-  function tab:AddSection(name)
-    if type(name) == "table" then name = name[1] or name.Name or "Section" end
+  function tab:AddSection(name, forceSide)
+    if type(name) == "table" then
+      forceSide = forceSide or name.Side or name.side
+      name = name[1] or name.Name or "Section"
+    end
     name = tostring(name or "Section")
-    local side = sideFlip
-    sideFlip = (sideFlip == "Left") and "Right" or "Left"
+    local side = forceSide or sideFlip
+    if side ~= "Left" and side ~= "Right" then side = sideFlip end
+    if not forceSide then
+      sideFlip = (sideFlip == "Left") and "Right" or "Left"
+    end
     local ok, s = pcall(function()
       return page:Section({ Name = name, Side = side })
     end)
@@ -1832,21 +1838,22 @@ end
 print("[nyann os] Xezios menu ready")
 
 local Tabs = {
-    Info = Window:MakeTab({ Title = "Tab Info And Status", Icon = "info" }),
-    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
-    Font = Window:MakeTab({ Title = "Tab Font", Icon = "rbxassetid://112173305232811" }),
-    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
-    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = "Tab Volcano Event", Icon = "tent" }),
-    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = "Tab Teleport", Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
-    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
+    Info = Window:MakeTab({ Title = "Info And Status", Icon = "" }),
+    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://" }),
+    Font = Window:MakeTab({ Title = "Font", Icon = "rbxassetid://" }),
+    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://" }),
+    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://" }),
+    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://" }),
+    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://" }),
+    Prehistoric = Window:MakeTab({ Title = "Volcano Event", Icon = "" }),
+    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://" }),
+    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
+    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
+    Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
+    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://" }),
+    Music = Window:MakeTab({ Title = "Music", Icon = "rbxassetid://6031068420" }),
+    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
 }
 
 Tabs.Info:AddSection("Information")
@@ -11748,6 +11755,399 @@ Tabs.Shop:AddButton({
     end
 })
 
+-- =========================================================
+-- MUSIC PLAYER + VOLUME (Miscellaneous)
+-- Playlist: https://pastefy.app/0QU2aU7c/raw
+-- =========================================================
+Tabs.Music:AddSection("Music Player", "Left")
+
+_G.MusicVolume = _G.MusicVolume or 0.6
+_G.GameVolume = _G.GameVolume or 1
+_G.MuteGame = _G.MuteGame or false
+_G.MusicPlaying = false
+_G.MusicLoop = true
+_G.SelectedSong = _G.SelectedSong or nil
+
+local MusicFolder = "nyann_os_music"
+pcall(function()
+  if makefolder and not isfolder(MusicFolder) then makefolder(MusicFolder) end
+end)
+
+local MusicSound = Instance.new("Sound")
+MusicSound.Name = "NyannMusicPlayer"
+MusicSound.Looped = true
+MusicSound.Volume = _G.MusicVolume
+MusicSound.Parent = game:GetService("SoundService")
+
+local Playlist = {}
+local SongNames = {}
+local SongMap = {} -- name -> entry
+
+pcall(function()
+  local HttpService = game:GetService("HttpService")
+  local raw = game:HttpGet("https://pastefy.app/0QU2aU7c/raw")
+  local data = HttpService:JSONDecode(raw)
+  if type(data) == "table" then
+    for _, song in ipairs(data) do
+      if song.name and song.download_url then
+        local label = tostring(song.name)
+        if song.artist and song.artist ~= "" then
+          label = label .. " — " .. tostring(song.artist)
+        end
+        table.insert(Playlist, song)
+        table.insert(SongNames, label)
+        SongMap[label] = song
+      end
+    end
+  end
+end)
+
+if #SongNames == 0 then
+  SongNames = {"(Playlist load failed)"}
+end
+
+local function StopMusic()
+  pcall(function()
+    MusicSound:Stop()
+    MusicSound.SoundId = ""
+  end)
+  _G.MusicPlaying = false
+end
+
+local function PlaySong(label)
+  local entry = SongMap[label]
+  if not entry or not entry.download_url then
+    pcall(function()
+      Window:Notify({ Title = "Music", Content = "Song not found", Duration = 3 })
+    end)
+    return
+  end
+
+  _G.SelectedSong = label
+  StopMusic()
+
+  task.spawn(function()
+    local ok, err = pcall(function()
+      local url = entry.download_url
+      local safeName = (entry.name or "track"):gsub("[^%w%-%_ ]", ""):gsub("%s+", "_")
+      if #safeName < 2 then safeName = "track" end
+      local filePath = MusicFolder .. "/" .. safeName .. ".mp3"
+
+      -- download if needed
+      if not (isfile and isfile(filePath)) then
+        local body = game:HttpGet(url)
+        if type(body) ~= "string" or #body < 1000 then
+          error("download failed")
+        end
+        writefile(filePath, body)
+      end
+
+      local asset
+      if getcustomasset then
+        asset = getcustomasset(filePath)
+      elseif getsynasset then
+        asset = getsynasset(filePath)
+      else
+        error("no getcustomasset")
+      end
+
+      MusicSound.SoundId = asset
+      MusicSound.Looped = _G.MusicLoop == true
+      MusicSound.Volume = tonumber(_G.MusicVolume) or 0.6
+      MusicSound:Play()
+      _G.MusicPlaying = true
+    end)
+
+    pcall(function()
+      if ok then
+        Window:Notify({
+          Title = "Music",
+          Content = "Playing: " .. tostring(entry.name),
+          Duration = 3,
+        })
+      else
+        Window:Notify({
+          Title = "Music",
+          Content = "Play failed (executor may block audio)",
+          Duration = 4,
+        })
+      end
+    end)
+  end)
+end
+
+-- Mute game only — NEVER kill hub music
+local _MutedOriginal = {}
+local function IsHubMusic(s)
+  if not s then return false end
+  if s == MusicSound then return true end
+  if s.Name == "NyannMusicPlayer" then return true end
+  if s:GetAttribute("NyannHubMusic") == true then return true end
+  return false
+end
+
+local MusicGroup = game:GetService("SoundService"):FindFirstChild("NyannMusicGroup")
+if not MusicGroup then
+  MusicGroup = Instance.new("SoundGroup")
+  MusicGroup.Name = "NyannMusicGroup"
+  MusicGroup.Volume = 1
+  MusicGroup.Parent = game:GetService("SoundService")
+end
+pcall(function()
+  MusicSound.SoundGroup = MusicGroup
+  MusicSound:SetAttribute("NyannHubMusic", true)
+  if MusicSound.Parent ~= game:GetService("SoundService") then
+    MusicSound.Parent = game:GetService("SoundService")
+  end
+end)
+
+local function ProtectMusic()
+  pcall(function()
+    MusicGroup.Volume = 1
+    MusicSound.SoundGroup = MusicGroup
+    MusicSound:SetAttribute("NyannHubMusic", true)
+    local mv = tonumber(_G.MusicVolume) or 0.6
+    MusicSound.Volume = mv
+  end)
+end
+
+local function SilenceSound(s)
+  if not s or not s:IsA("Sound") or IsHubMusic(s) then return end
+  if _MutedOriginal[s] == nil then
+    pcall(function() _MutedOriginal[s] = s.Volume end)
+  end
+  pcall(function()
+    if s.Volume ~= 0 then s.Volume = 0 end
+  end)
+end
+
+local function MuteAllGameSounds()
+  local roots = {
+    workspace,
+    game:GetService("SoundService"),
+    game:GetService("Players"),
+    game:GetService("Lighting"),
+    game:GetService("ReplicatedStorage"),
+  }
+  pcall(function()
+    local pg = game.Players.LocalPlayer and game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if pg then table.insert(roots, pg) end
+  end)
+
+  for _, root in ipairs(roots) do
+    pcall(function()
+      for _, s in ipairs(root:GetDescendants()) do
+        SilenceSound(s)
+      end
+    end)
+  end
+  -- DO NOT set SoundService.Volume or MasterVolume (kills hub music)
+  ProtectMusic()
+end
+
+local function RestoreGameSounds()
+  local vol = math.clamp(tonumber(_G.GameVolume) or 1, 0, 1)
+  for s, orig in pairs(_MutedOriginal) do
+    pcall(function()
+      if s and s.Parent and not IsHubMusic(s) then
+        s.Volume = (typeof(orig) == "number") and orig or vol
+      end
+    end)
+  end
+  table.clear(_MutedOriginal)
+  ProtectMusic()
+end
+
+local function EnsureMuteHooks()
+  if _G._NyannMuteHooked then return end
+  _G._NyannMuteHooked = true
+
+  local function onDesc(obj)
+    if not obj:IsA("Sound") then return end
+    if IsHubMusic(obj) then
+      ProtectMusic()
+      return
+    end
+    if _G.MuteGame then
+      SilenceSound(obj)
+      pcall(function()
+        obj:GetPropertyChangedSignal("Volume"):Connect(function()
+          if _G.MuteGame and not IsHubMusic(obj) and obj.Volume ~= 0 then
+            obj.Volume = 0
+          end
+        end)
+      end)
+    end
+  end
+
+  pcall(function() workspace.DescendantAdded:Connect(onDesc) end)
+  pcall(function() game:GetService("SoundService").DescendantAdded:Connect(onDesc) end)
+  pcall(function()
+    local plr = game.Players.LocalPlayer
+    if plr then plr.DescendantAdded:Connect(onDesc) end
+  end)
+end
+
+local function ApplyGameVolume()
+  EnsureMuteHooks()
+  if _G.MuteGame then
+    MuteAllGameSounds()
+  else
+    RestoreGameSounds()
+  end
+  ProtectMusic()
+end
+
+-- LEFT: Music controls
+Tabs.Music:AddDropdown({
+  Name = "Select Song",
+  Description = "Playlist from pastefy",
+  Options = SongNames,
+  Default = SongNames[1],
+  Multi = false,
+  Callback = function(v)
+    _G.SelectedSong = v
+  end,
+})
+
+Tabs.Music:AddToggle({
+  Name = "Play Music",
+  Description = "Play / stop selected song",
+  Default = false,
+  Callback = function(v)
+    if v then
+      PlaySong(_G.SelectedSong or SongNames[1])
+    else
+      StopMusic()
+    end
+  end,
+})
+
+Tabs.Music:AddToggle({
+  Name = "Loop Music",
+  Description = "Repeat current track",
+  Default = true,
+  Callback = function(v)
+    _G.MusicLoop = v
+    pcall(function() MusicSound.Looped = v end)
+  end,
+})
+
+Tabs.Music:AddButton({
+  Name = "Play Selected",
+  Description = "Start current song",
+  Callback = function()
+    PlaySong(_G.SelectedSong or SongNames[1])
+  end,
+})
+
+Tabs.Music:AddButton({
+  Name = "Stop Music",
+  Description = "Stop playback",
+  Callback = function()
+    StopMusic()
+  end,
+})
+
+Tabs.Music:AddButton({
+  Name = "Next Random Song",
+  Description = "Play a random track",
+  Callback = function()
+    if #Playlist == 0 then return end
+    local pick = SongNames[math.random(1, #SongNames)]
+    _G.SelectedSong = pick
+    PlaySong(pick)
+  end,
+})
+
+-- RIGHT-side style section: volume controls
+Tabs.Music:AddSection("Volume Controls", "Right")
+
+Tabs.Music:AddSlider({
+  Name = "Music Volume",
+  Description = "Hub music volume",
+  Min = 0,
+  Max = 100,
+  Default = math.floor((_G.MusicVolume or 0.6) * 100),
+  Callback = function(v)
+    local n = (tonumber(v) or 60) / 100
+    _G.MusicVolume = n
+    pcall(function() MusicSound.Volume = n end)
+  end,
+})
+
+Tabs.Music:AddSlider({
+  Name = "Game Volume",
+  Description = "Roblox / game sound volume",
+  Min = 0,
+  Max = 100,
+  Default = math.floor((_G.GameVolume or 1) * 100),
+  Callback = function(v)
+    _G.GameVolume = (tonumber(v) or 100) / 100
+    if not _G.MuteGame then
+      ApplyGameVolume()
+    end
+  end,
+})
+
+Tabs.Music:AddToggle({
+  Name = "Mute Game Sounds",
+  Description = "Force silence ALL game audio (hub music stays)",
+  Default = false,
+  Callback = function(v)
+    _G.MuteGame = v
+    ApplyGameVolume()
+  end,
+})
+
+Tabs.Music:AddButton({
+  Name = "Reset Game Volume",
+  Description = "Restore default game volume",
+  Callback = function()
+    _G.MuteGame = false
+    _G.GameVolume = 1
+    ApplyGameVolume()
+    pcall(function()
+      Window:Notify({ Title = "Volume", Content = "Game volume reset to 100%", Duration = 2 })
+    end)
+  end,
+})
+
+-- Mute loop: silence game, always protect hub music
+task.spawn(function()
+  while task.wait(0.4) do
+    pcall(function()
+      if _G.MuteGame then
+        MuteAllGameSounds()
+      end
+      ProtectMusic()
+    end)
+  end
+end)
+
+task.spawn(function()
+  local RS = game:GetService("RunService")
+  RS.Heartbeat:Connect(function()
+    if not _G.MuteGame then
+      pcall(ProtectMusic)
+      return
+    end
+    pcall(function()
+      for _, s in ipairs(workspace:GetDescendants()) do
+        if s:IsA("Sound") and not IsHubMusic(s) and s.Volume ~= 0 then
+          s.Volume = 0
+        end
+      end
+      for _, s in ipairs(game:GetService("SoundService"):GetChildren()) do
+        if s:IsA("Sound") and not IsHubMusic(s) and s.Volume ~= 0 then
+          s.Volume = 0
+        end
+      end
+      ProtectMusic()
+    end)
+  end)
+end)
+
 Tabs.Misc:AddSection("Server - Function")
 Tabs.Misc:AddButton({
     Name = "Redeem All Codes",
@@ -12563,7 +12963,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- TÙY CHỈNH
-local TEXT = "nyann os by real _@nyannnokonoko"          
+local TEXT = "@nyannnokonoko"          
 local TEXT_SIZE = 14             
 local GUI_OFFSET = Vector3.new(0, 1.8, 0) 
 
