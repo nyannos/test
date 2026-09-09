@@ -1369,6 +1369,40 @@ do
     src = src:gsub("Color3%.fromRGB%(255,%s*85,%s*0%)", "Color3.fromRGB(180, 180, 180)")
     src = src:gsub("Color3%.fromRGB%(27,%s*42,%s*53%)", "Color3.fromRGB(18, 18, 18)")
     src = src:gsub("Color3%.new%(0%.333333,%s*0%.666667,%s*1%)", "Color3.fromRGB(255, 255, 255)")
+    -- Bigger window (450x272 -> 620x400)
+    src = src:gsub('Top_Bar%.Size = UDim2%.new%(0, 450, 0, 24%)', 'Top_Bar.Size = UDim2.new(0, 620, 0, 28)')
+    src = src:gsub('BlackBackground%.Size = UDim2%.new%(0, 450, 0, 272%)', 'BlackBackground.Size = UDim2.new(0, 620, 0, 400)')
+    src = src:gsub('VideoBackground%.Size = UDim2%.new%(0, 450, 0, 272%)', 'VideoBackground.Size = UDim2.new(0, 620, 0, 400)')
+    src = src:gsub('NewDropShadow%.Size = UDim2%.new%(0, 495, 0, 286%)', 'NewDropShadow.Size = UDim2.new(0, 680, 0, 430)')
+    src = src:gsub('LeftTab%.Size = UDim2%.new%(0, 123, 0, 265%)', 'LeftTab.Size = UDim2.new(0, 160, 0, 390)')
+    src = src:gsub('Tabs%.Size = UDim2%.new%(0, 123, 0, 231%)', 'Tabs.Size = UDim2.new(0, 160, 0, 350)')
+    src = src:gsub('line%.Size = UDim2%.new%(0, 123, 0, 1%)', 'line.Size = UDim2.new(0, 160, 0, 1)')
+    src = src:gsub('GameName%.Size = UDim2%.new%(0, 123, 0, 23%)', 'GameName.Size = UDim2.new(0, 160, 0, 23)')
+    src = src:gsub('RightTab%.Size = UDim2%.new%(0, 313, 0, 265%)', 'RightTab.Size = UDim2.new(0, 445, 0, 390)')
+    src = src:gsub('RightTab%.Position = UDim2%.new%(0%.288888901, 0, 0%.0257352944, 0%)', 'RightTab.Position = UDim2.new(0.27, 0, 0.025, 0)')
+    src = src:gsub('TabFrame%.Size = UDim2%.new%(0, 313, 0, 264%)', 'TabFrame.Size = UDim2.new(0, 445, 0, 388)')
+    src = src:gsub('FixBetter%.Size = UDim2%.new%(0, 450, 0, 14%)', 'FixBetter.Size = UDim2.new(0, 620, 0, 14)')
+    src = src:gsub('TrueGame%.Size = UDim2%.new%(0, 332, 0, 17%)', 'TrueGame.Size = UDim2.new(0, 480, 0, 20)')
+    -- content controls wider
+    src = src:gsub('UDim2%.new%(0, 307, 0, 27%)', 'UDim2.new(0, 430, 0, 30)')
+    src = src:gsub('UDim2%.new%(0, 307, 0, 32%)', 'UDim2.new(0, 430, 0, 34)')
+    src = src:gsub('UDim2%.new%(0, 307, 0, 36%)', 'UDim2.new(0, 430, 0, 38)')
+    src = src:gsub('UDim2%.new%(0, 307, 0, 30%)', 'UDim2.new(0, 430, 0, 32)')
+    src = src:gsub('UDim2%.new%(0, 307, 0, 139%)', 'UDim2.new(0, 430, 0, 160)')
+    -- minimize tween sizes
+    src = src:gsub('Size = UDim2%.new%(0, 450,0, 6%)', 'Size = UDim2.new(0, 620,0, 6)')
+    src = src:gsub('Size = UDim2%.new%(0, 450,0, 272%)', 'Size = UDim2.new(0, 620,0, 400)')
+    -- Toggle knob: OFF = black, ON = white
+    src = src:gsub(
+      'ClickThis%.BackgroundColor3 = Color3%.fromRGB%(255, 255, 255%)',
+      'ClickThis.BackgroundColor3 = Color3.fromRGB(20, 20, 20)'
+    )
+    -- when toggled true uses main_color (white) - good
+    -- when toggled false sets to white in original - force black
+    src = src:gsub(
+      'ClickThis%.BackgroundColor3 = Color3%.fromRGB%(255, 255, 255%)',
+      'ClickThis.BackgroundColor3 = Color3.fromRGB(20, 20, 20)'
+    )
     local fn, err = loadstring(src)
     if not fn then error(err or "compile") end
     return fn()
@@ -1381,6 +1415,62 @@ do
 end
 
 local RealWindow = lib:Window("nyann os", "by real _@nyannnokonoko", Color3.fromRGB(255, 255, 255))
+
+-- Center menu on screen + scale fix
+task.defer(function()
+  task.wait(0.15)
+  pcall(function()
+    local gui = game:GetService("CoreGui"):FindFirstChild("Hoho_Hub")
+    if not gui then
+      for _, v in ipairs(game:GetService("CoreGui"):GetChildren()) do
+        if tostring(v.Name):lower():find("hoho") then gui = v break end
+      end
+    end
+    if not gui then return end
+    local top = gui:FindFirstChild("Top_Bar") or gui:FindFirstChildWhichIsA("Frame")
+    if top then
+      -- center: window ~620 x 428
+      top.AnchorPoint = Vector2.new(0.5, 0.5)
+      top.Position = UDim2.new(0.5, 0, 0.5, 0)
+      if top.Size.X.Offset < 500 then
+        top.Size = UDim2.new(0, 620, 0, 28)
+      end
+      local bg = top:FindFirstChild("BlackBackground")
+      if bg then
+        bg.Size = UDim2.new(0, 620, 0, 400)
+      end
+    end
+  end)
+end)
+
+-- Force toggle buttons black (off) / white (on)
+task.spawn(function()
+  local function fixToggles(root)
+    for _, d in ipairs(root:GetDescendants()) do
+      if d.Name == "ClickThis" and d:IsA("TextButton") then
+        -- if currently light and not "on", set black; leave white alone if already on
+        pcall(function()
+          local col = d.BackgroundColor3
+          local r,g,b = col.R*255, col.G*255, col.B*255
+          -- pure white default off-state from lib -> black
+          if r > 240 and g > 240 and b > 240 then
+            d.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+          end
+        end)
+      end
+    end
+  end
+  for i = 1, 12 do
+    task.wait(0.4)
+    pcall(function()
+      for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
+        if tostring(gui.Name):lower():find("hoho") or gui.Name == "Hoho_Hub" then
+          fixToggles(gui)
+        end
+      end
+    end)
+  end
+end)
 
 -- Post-fix remaining colorful pixels
 task.defer(function()
