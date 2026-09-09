@@ -1413,10 +1413,19 @@ task.defer(function()
 end)
 
 local RealWindow = Library:Window({
-  Prefix = "nyann",
-  Suffix = "os",
+  Prefix = "nyann os by real",
+  Suffix = "_@nyannnokonoko",
   Size = UDim2.fromOffset(800, 580), -- taller so all tabs fit
 })
+
+pcall(function()
+  if RealWindow and RealWindow.ChangeMenuTitle then
+    RealWindow.ChangeMenuTitle("nyann os by real _@nyannnokonoko")
+  elseif RealWindow and RealWindow.Items and RealWindow.Items.UITitle then
+    RealWindow.Items.UITitle.Text = "nyann os by real _@nyannnokonoko"
+  end
+end)
+
 
 -- Center + make left tab list scrollable (fix Miscellaneous)
 task.defer(function()
@@ -1822,146 +1831,22 @@ end
 
 print("[nyann os] Xezios menu ready")
 
--- ===== Language persist =====
-_G.LangFolder = "nyann_os"
-_G.LangFile = "nyann_os/language.json"
-pcall(function()
-  if makefolder and not isfolder("nyann_os") then makefolder("nyann_os") end
-end)
-
-_G.SelectLanguage = _G.SelectLanguage or "English"
-_G.AutoLanguage = _G.AutoLanguage == true
-
-local function SaveLanguagePref()
-  pcall(function()
-    if not writefile then return end
-    local Hs = game:GetService("HttpService")
-    writefile(_G.LangFile, Hs:JSONEncode({
-      Language = _G.SelectLanguage or "English",
-      Auto = _G.AutoLanguage == true,
-    }))
-  end)
-end
-
-local function LoadLanguagePref()
-  pcall(function()
-    if not (isfile and isfile(_G.LangFile)) then return end
-    local Hs = game:GetService("HttpService")
-    local data = Hs:JSONDecode(readfile(_G.LangFile))
-    if type(data) == "table" then
-      if type(data.Language) == "string" then _G.SelectLanguage = data.Language end
-      if data.Auto ~= nil then _G.AutoLanguage = data.Auto and true or false end
-    end
-  end)
-end
-LoadLanguagePref()
-
-local TabTitleLang = {
-  English = {
-    ["Tab Info And Status"]="Tab Info And Status",["Tab Farming"]="Tab Farming",["Tab Font"]="Tab Font",
-    ["Tab Setting"]="Tab Setting",["Tab Fishing"]="Tab Fishing",["Tab Quest And Item"]="Tab Quest And Item",
-    ["Tab Sea Event"]="Tab Sea Event",["Tab Mirage And Race"]="Tab Mirage And Race",["Tab Volcano Event"]="Tab Volcano Event",
-    ["Tab Stats And Esp"]="Tab Stats And Esp",["Tab Fruit And Raid"]="Tab Fruit And Raid",["Tab Local Player"]="Tab Local Player",
-    ["Tab Teleport"]="Tab Teleport",["Tab Shopping"]="Tab Shopping",["Tab Miscellaneous"]="Tab Miscellaneous",
-  },
-  Vietnamese = {
-    ["Tab Info And Status"]="Tab Thong Tin",["Tab Farming"]="Tab Farm",["Tab Font"]="Tab Font",
-    ["Tab Setting"]="Tab Cai Dat",["Tab Fishing"]="Tab Cau Ca",["Tab Quest And Item"]="Tab Nhiem Vu",
-    ["Tab Sea Event"]="Tab Sea Event",["Tab Mirage And Race"]="Tab Mirage / Race",["Tab Volcano Event"]="Tab Nui Lua",
-    ["Tab Stats And Esp"]="Tab Stats / ESP",["Tab Fruit And Raid"]="Tab Fruit / Raid",["Tab Local Player"]="Tab Nguoi Choi",
-    ["Tab Teleport"]="Tab Dich Chuyen",["Tab Shopping"]="Tab Cua Hang",["Tab Miscellaneous"]="Tab Khac",
-  },
-  Portuguese = {
-    ["Tab Info And Status"]="Aba Info",["Tab Farming"]="Aba Farm",["Tab Font"]="Aba Fonte",
-    ["Tab Setting"]="Aba Config",["Tab Fishing"]="Aba Pesca",["Tab Quest And Item"]="Aba Missoes",
-    ["Tab Sea Event"]="Aba Sea Event",["Tab Mirage And Race"]="Aba Mirage / Race",["Tab Volcano Event"]="Aba Vulcao",
-    ["Tab Stats And Esp"]="Aba Stats / ESP",["Tab Fruit And Raid"]="Aba Fruit / Raid",["Tab Local Player"]="Aba Jogador",
-    ["Tab Teleport"]="Aba Teleporte",["Tab Shopping"]="Aba Loja",["Tab Miscellaneous"]="Aba Outros",
-  },
-}
-
-local function T(enTitle)
-  local pack = TabTitleLang[_G.SelectLanguage or "English"] or TabTitleLang.English
-  return pack[enTitle] or enTitle
-end
-
-local function RefreshMenuLanguage()
-  local pack = TabTitleLang[_G.SelectLanguage or "English"] or TabTitleLang.English
-  pcall(function()
-    local holder = RealWindow and RealWindow.Items and RealWindow.Items.TabHolder
-    if not holder then return end
-    for _, d in ipairs(holder:GetDescendants()) do
-      if d:IsA("TextLabel") then
-        for enKey, _ in pairs(TabTitleLang.English) do
-          local isMatch = (d.Text == enKey)
-          if not isMatch then
-            for _, p in pairs(TabTitleLang) do
-              if p[enKey] == d.Text then isMatch = true break end
-            end
-          end
-          if isMatch then
-            d.Text = pack[enKey] or enKey
-            break
-          end
-        end
-      end
-    end
-  end)
-end
-
-local function ApplyLanguage(langName)
-  langName = langName or _G.SelectLanguage or "English"
-  _G.SelectLanguage = langName
-  local LangMap = {
-    English="en-us", Vietnamese="vi-vn", Portuguese="pt-br", Spanish="es-es",
-    Thai="th-th", Indonesian="id-id", French="fr-fr", German="de-de",
-    Japanese="ja-jp", Korean="ko-kr", Chinese="zh-cn", Russian="ru-ru",
-  }
-  local locale = LangMap[langName] or "en-us"
-  local ok = false
-  pcall(function()
-    local LS = game:GetService("LocalizationService")
-    LS.RobloxLocaleId = locale
-    LS.SystemLocaleId = locale
-    ok = true
-  end)
-  pcall(function()
-    local rem = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
-    if rem and rem:FindFirstChild("CommF_") then
-      rem.CommF_:InvokeServer("SetLanguage", langName)
-      rem.CommF_:InvokeServer("ChangeLanguage", locale)
-    end
-  end)
-  RefreshMenuLanguage()
-  SaveLanguagePref()
-  return ok, locale
-end
-
-_G.ApplyLanguage = ApplyLanguage
-_G.RefreshMenuLanguage = RefreshMenuLanguage
-_G.SaveLanguagePref = SaveLanguagePref
-
-task.defer(function()
-  task.wait(0.4)
-  pcall(ApplyLanguage, _G.SelectLanguage)
-end)
-
 local Tabs = {
-    Info = Window:MakeTab({ Title = T("Tab Info And Status"), Icon = "info" }),
-    Main = Window:MakeTab({ Title = T("Tab Farming"), Icon = "rbxassetid://7733960981" }),
-    Font = Window:MakeTab({ Title = T("Tab Font"), Icon = "rbxassetid://112173305232811" }),
-    Settings = Window:MakeTab({ Title = T("Tab Setting"), Icon = "rbxassetid://7734053495" }),
-    Fish = Window:MakeTab({ Title = T("Tab Fishing"), Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = T("Tab Quest And Item"), Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = T("Tab Sea Event"), Icon = "waves" }),
-    Race = Window:MakeTab({ Title = T("Tab Mirage And Race"), Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = T("Tab Volcano Event"), Icon = "tent" }),
-    Esp = Window:MakeTab({ Title = T("Tab Stats And Esp"), Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = T("Tab Fruit And Raid"), Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = T("Tab Local Player"), Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = T("Tab Teleport"), Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = T("Tab Shopping"), Icon = "rbxassetid://6031265976" }),
-    Misc = Window:MakeTab({ Title = T("Tab Miscellaneous"), Icon = "rbxassetid://10709783577" })
+    Info = Window:MakeTab({ Title = "Tab Info And Status", Icon = "info" }),
+    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
+    Font = Window:MakeTab({ Title = "Tab Font", Icon = "rbxassetid://112173305232811" }),
+    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
+    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
+    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
+    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
+    Prehistoric = Window:MakeTab({ Title = "Tab Volcano Event", Icon = "tent" }),
+    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
+    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
+    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
+    Travel = Window:MakeTab({ Title = "Tab Teleport", Icon = "locate" }),
+    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
+    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
 }
 
 Tabs.Info:AddSection("Information")
@@ -11863,88 +11748,6 @@ Tabs.Shop:AddButton({
     end
 })
 
-Tabs.Misc:AddSection("Language")
-
-Tabs.Misc:AddDropdown({
-  Name = "Select Language",
-  Description = "Saved even after close menu",
-  Options = {
-    "English", "Vietnamese", "Portuguese", "Spanish",
-    "Thai", "Indonesian", "French", "German",
-    "Japanese", "Korean", "Chinese", "Russian"
-  },
-  Default = _G.SelectLanguage or "English",
-  Multi = false,
-  Callback = function(v)
-    _G.SelectLanguage = v
-    SaveLanguagePref()
-    local ok, locale = ApplyLanguage(v)
-    pcall(function()
-      Window:Notify({
-        Title = "Language",
-        Content = "Saved: " .. tostring(v) .. " | reopen menu = same language",
-        Duration = 3,
-      })
-    end)
-  end,
-})
-
-Tabs.Misc:AddToggle({
-  Name = "Auto Change Language",
-  Description = "Keep applying saved language",
-  Default = _G.AutoLanguage == true,
-  Callback = function(v)
-    _G.AutoLanguage = v
-    SaveLanguagePref()
-    if v then ApplyLanguage(_G.SelectLanguage) end
-  end,
-})
-
-Tabs.Misc:AddButton({
-  Name = "Apply Language Now",
-  Description = "Apply + refresh tab names",
-  Callback = function()
-    ApplyLanguage(_G.SelectLanguage)
-    RefreshMenuLanguage()
-    pcall(function()
-      Window:Notify({
-        Title = "Language",
-        Content = "Applied: " .. tostring(_G.SelectLanguage),
-        Duration = 3,
-      })
-    end)
-  end,
-})
-
--- When user opens menu again, restore language + tab titles
-task.defer(function()
-  task.wait(1)
-  pcall(function()
-    local prev = ToggleXeziosMenu
-    if type(prev) ~= "function" then return end
-    ToggleXeziosMenu = function(force)
-      prev(force)
-      task.defer(function()
-        task.wait(0.05)
-        pcall(function()
-          LoadLanguagePref()
-          ApplyLanguage(_G.SelectLanguage)
-          RefreshMenuLanguage()
-        end)
-      end)
-    end
-    getgenv().NyannToggleMenu = ToggleXeziosMenu
-  end)
-end)
-
-task.spawn(function()
-  while task.wait(12) do
-    if _G.AutoLanguage then
-      pcall(ApplyLanguage, _G.SelectLanguage)
-    end
-  end
-end)
-
 Tabs.Misc:AddSection("Server - Function")
 Tabs.Misc:AddButton({
     Name = "Redeem All Codes",
@@ -12746,13 +12549,13 @@ end
 StartMainLoops()
 
 Window:Notify({
-  Title = "Welcome to nyann os",
+  Title = "Welcome to nyann os by real _@nyannnokonoko",
   Content = "Load...",
   Image = "rbxassetid://94678517792779",
   Duration = 5
 })
 -- Script hiển thị tên trên đầu nhân vật
--- Tạo bởi: nyann os
+-- Created by: nyann os by real _@nyannnokonoko
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12760,7 +12563,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- TÙY CHỈNH
-local TEXT = "nyann os"          
+local TEXT = "nyann os by real _@nyannnokonoko"          
 local TEXT_SIZE = 14             
 local GUI_OFFSET = Vector3.new(0, 1.8, 0) 
 
