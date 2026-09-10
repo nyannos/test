@@ -1357,7 +1357,7 @@ print("[nyann os] loading Xova UI...")
 local Library
 do
   local ok, res = pcall(function()
-    local src = game:HttpGet("https://raw.githubusercontent.com/vita6it/Antigravity/refs/heads/main/Utils/Library.lua")
+    local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/Library.lua.txt")
     if type(src) ~= "string" or #src < 1000 then error("empty") end
     -- Patch pink accents -> white before load
     src = src:gsub("Color3%.fromRGB%(255,%s*0,%s*127%)", "Color3.fromRGB(255, 255, 255)")
@@ -1394,8 +1394,8 @@ local function ForceBlackWhite(root)
 end
 
 local RealWindow = Library:Window({
-  Title = "nyann os by real",
-  SubTitle = "_@nyannnokonoko | B&W",
+  Title = "nyann os Version 3 by real_@nyannnokonoko",
+  SubTitle = "Version 3",
 })
 
 task.defer(function()
