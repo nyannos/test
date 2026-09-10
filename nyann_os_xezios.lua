@@ -1728,9 +1728,12 @@ local redzlib = {
 }
 
 -- ========================================
--- MINIMIZE ICON (toggle menu) - rbxassetid://94678517792779
+-- MINIMIZE ICON (square, top-left like screenshot N)
+-- click: spin 360 then open | close: spin -360
 -- ========================================
 local MenuVisible = true
+local MinimizeBusy = false
+
 local function ToggleXeziosMenu(force)
   if force ~= nil then
     MenuVisible = force
@@ -1744,7 +1747,6 @@ local function ToggleXeziosMenu(force)
       RealWindow.Items.Window.Visible = MenuVisible
     end
   end)
-  -- also toggle Library.Items ScreenGui if present
   pcall(function()
     if Library and Library.Items then
       Library.Items.Enabled = MenuVisible
@@ -1755,10 +1757,17 @@ end
 do
   local CoreGui = game:GetService("CoreGui")
   local UIS = game:GetService("UserInputService")
+  local TweenService = game:GetService("TweenService")
+
+  pcall(function()
+    local old = CoreGui:FindFirstChild("NyannMinimizeIcon")
+    if old then old:Destroy() end
+  end)
 
   local sg = Instance.new("ScreenGui")
   sg.Name = "NyannMinimizeIcon"
   sg.ResetOnSpawn = false
+  sg.IgnoreGuiInset = true
   sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
   sg.DisplayOrder = 999
   pcall(function() sg.Parent = CoreGui end)
@@ -1768,21 +1777,41 @@ do
 
   local btn = Instance.new("ImageButton")
   btn.Name = "MinimizeBtn"
-  btn.Size = UDim2.new(0, 62, 0, 62) -- larger square
-  btn.Position = UDim2.new(0.08, 0, 0.35, 0)
-  btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+  btn.Size = UDim2.new(0, 56, 0, 56)
+  -- position like black N on screenshot (top-left)
+  btn.Position = UDim2.new(0, 14, 0, 118)
+  btn.AnchorPoint = Vector2.new(0, 0)
+  btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
   btn.BackgroundTransparency = 0
   btn.BorderSizePixel = 0
   btn.Image = "rbxassetid://94678517792779"
   btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
   btn.ScaleType = Enum.ScaleType.Fit
+  btn.ClipsDescendants = false
   btn.Parent = sg
 
-  -- square (slight soft corner only)
   local corner = Instance.new("UICorner")
-  corner.CornerRadius = UDim.new(0, 6)
+  corner.CornerRadius = UDim.new(0, 8) -- square soft
   corner.Parent = btn
-  -- no white stroke / border
+
+  local Rotation = Instance.new("UIRotation")
+  -- UIRotation may not exist on all; use btn.Rotation property instead
+  pcall(function() Rotation:Destroy() end)
+
+  local function SpinOnce(degrees, duration)
+    duration = duration or 0.35
+    local startR = btn.Rotation
+    local goal = startR + degrees
+    local tw = TweenService:Create(
+      btn,
+      TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+      { Rotation = goal }
+    )
+    tw:Play()
+    tw.Completed:Wait()
+    -- normalize rotation
+    btn.Rotation = goal % 360
+  end
 
   -- Drag
   local dragging, dragStart, startPos, dragInput
@@ -1821,30 +1850,68 @@ do
     end
   end)
 
-  -- Click = toggle menu (ignore if dragged a lot)
   local clickPos
   btn.MouseButton1Down:Connect(function()
     clickPos = UIS:GetMouseLocation()
   end)
+
   btn.MouseButton1Click:Connect(function()
+    if MinimizeBusy then return end
     local now = UIS:GetMouseLocation()
     if clickPos and (now - clickPos).Magnitude > 12 then
-      return -- was a drag
+      return
     end
-    ToggleXeziosMenu()
+    MinimizeBusy = true
+    task.spawn(function()
+      if MenuVisible then
+        -- closing: spin reverse then hide
+        pcall(function() SpinOnce(-360, 0.4) end)
+        ToggleXeziosMenu(false)
+      else
+        -- opening: spin forward then show
+        pcall(function() SpinOnce(360, 0.4) end)
+        ToggleXeziosMenu(true)
+      end
+      MinimizeBusy = false
+    end)
   end)
 
-  -- LeftControl also toggles
   UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.LeftControl then
-      ToggleXeziosMenu()
+      if MinimizeBusy then return end
+      MinimizeBusy = true
+      task.spawn(function()
+        if MenuVisible then
+          pcall(function() SpinOnce(-360, 0.4) end)
+          ToggleXeziosMenu(false)
+        else
+          pcall(function() SpinOnce(360, 0.4) end)
+          ToggleXeziosMenu(true)
+        end
+        MinimizeBusy = false
+      end)
     end
   end)
 
-  getgenv().NyannToggleMenu = ToggleXeziosMenu
-  print("[nyann os] Minimize icon ready")
+  getgenv().NyannToggleMenu = function()
+    if MinimizeBusy then return end
+    MinimizeBusy = true
+    task.spawn(function()
+      if MenuVisible then
+        pcall(function() SpinOnce(-360, 0.4) end)
+        ToggleXeziosMenu(false)
+      else
+        pcall(function() SpinOnce(360, 0.4) end)
+        ToggleXeziosMenu(true)
+      end
+      MinimizeBusy = false
+    end)
+  end
+
+  print("[nyann os] Minimize icon ready (square + spin)")
 end
+
 
 print("[nyann os] Xezios menu ready")
 
@@ -4527,20 +4594,29 @@ spawn(function()
   end
 end)
 
--- Auto ON khi chạy script: Fast Attack + Bring + Buso + Spin XYZ + Stop Items
+-- Auto ON khi chạy script
 task.defer(function()
-  task.wait(0.35)
+  task.wait(0.4)
   _G.Seriality = true
   _B = true
   Boud = true
   RandomCFrame = true
   _G.StopWhenChalice = true
+  -- Anti AFK
+  pcall(function()
+    local vu = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+      vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+      task.wait(1)
+      vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    end)
+  end)
   pcall(function() if Initialize and Initialize.Set then Initialize:Set(true) end end)
   pcall(function() if Bringmob and Bringmob.Set then Bringmob:Set(true) end end)
   pcall(function() if BusuAura and BusuAura.Set then BusuAura:Set(true) end end)
   pcall(function() if RandomAround and RandomAround.Set then RandomAround:Set(true) end end)
   pcall(function() if StopI and StopI.Set then StopI:Set(true) end end)
-  print("[nyann os] Auto ON: Fast Attack / Bring / Buso / Spin XYZ / Stop Items")
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso / Spin XYZ / Stop Items / Anti AFK")
 end)
 Tabs.Settings:AddToggle({
     Name = "Auto Haki Observation",
