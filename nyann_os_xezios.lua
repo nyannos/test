@@ -633,7 +633,7 @@ sea2 = (game.PlaceId == 4442272183 or game.PlaceId == 79091703265657)
 sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
-    ["Tween Speed"] = 1.5, -- bay chậm hơn (duration = distance/(100*speed))
+    ["Tween Speed"] = 1.5, -- bay (duration = distance/(100*speed))
     ["Bypass Teleport"] = true,
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
@@ -4520,24 +4520,6 @@ Default = true,
 Callback = function(Value)
   Boud = Value
 end})
-
--- Auto-enable core settings when menu loads
-task.defer(function()
-  task.wait(0.3)
-  _G.Seriality = true
-  _B = true
-  Boud = true
-  pcall(function()
-    if Initialize and Initialize.Set then Initialize:Set(true) end
-  end)
-  pcall(function()
-    if Bringmob and Bringmob.Set then Bringmob:Set(true) end
-  end)
-  pcall(function()
-    if BusuAura and BusuAura.Set then BusuAura:Set(true) end
-  end)
-  print("[nyann os] Auto ON: Fast Attack / Bring / Buso")
-end)
 spawn(function()
   while wait(Sec) do
     pcall(function()
@@ -4547,6 +4529,18 @@ spawn(function()
       end
     end)
   end
+end)
+
+-- Auto ON khi chạy script: Fast Attack + Bring + Buso
+task.defer(function()
+  task.wait(0.25)
+  _G.Seriality = true
+  _B = true
+  Boud = true
+  pcall(function() if Initialize and Initialize.Set then Initialize:Set(true) end end)
+  pcall(function() if Bringmob and Bringmob.Set then Bringmob:Set(true) end end)
+  pcall(function() if BusuAura and BusuAura.Set then BusuAura:Set(true) end end)
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso")
 end)
 Tabs.Settings:AddToggle({
     Name = "Auto Haki Observation",
@@ -12725,173 +12719,3 @@ player.AncestryChanged:Connect(function(_, parent)
         -- Không cần làm gì thêm
     end
 end)
-
---==================================================
--- NYANN OS - STOP TWEEN BUTTON (tắt hết farm)
---==================================================
-do
-  local Players = game:GetService("Players")
-  local LocalPlayer = Players.LocalPlayer
-  local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-  local UserInputService = game:GetService("UserInputService")
-
-  pcall(function()
-    local old = PlayerGui:FindFirstChild("NYANN_StopTween")
-    if old then old:Destroy() end
-  end)
-
-  local StopGui = Instance.new("ScreenGui")
-  StopGui.Name = "NYANN_StopTween"
-  StopGui.ResetOnSpawn = false
-  StopGui.IgnoreGuiInset = true
-  StopGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-  StopGui.Parent = PlayerGui
-
-  local StopButton = Instance.new("TextButton")
-  StopButton.Name = "StopTween"
-  StopButton.Parent = StopGui
-  StopButton.AnchorPoint = Vector2.new(0.5, 0.5)
-  StopButton.Position = UDim2.new(0.09, 0, 0.26, 0)
-  StopButton.Size = UDim2.new(0, 220, 0, 62)
-  StopButton.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-  StopButton.BackgroundTransparency = 0.05
-  StopButton.BorderSizePixel = 0
-  StopButton.AutoButtonColor = false
-  StopButton.Text = ""
-
-  local Corner = Instance.new("UICorner")
-  Corner.CornerRadius = UDim.new(0, 20)
-  Corner.Parent = StopButton
-
-  local Stroke = Instance.new("UIStroke")
-  Stroke.Thickness = 2.5
-  Stroke.Color = Color3.fromRGB(200, 200, 200)
-  Stroke.Transparency = 0.1
-  Stroke.Parent = StopButton
-
-  local Icon = Instance.new("ImageLabel")
-  Icon.Parent = StopButton
-  Icon.BackgroundTransparency = 1
-  Icon.AnchorPoint = Vector2.new(0.5, 0.5)
-  Icon.Position = UDim2.new(0, 32, 0.5, 0)
-  Icon.Size = UDim2.new(0, 38, 0, 38)
-  Icon.Image = "rbxassetid://94678517792779"
-  Icon.ScaleType = Enum.ScaleType.Fit
-
-  local Text = Instance.new("TextLabel")
-  Text.Parent = StopButton
-  Text.BackgroundTransparency = 1
-  Text.Position = UDim2.new(0, 55, 0, 0)
-  Text.Size = UDim2.new(1, -62, 1, 0)
-  Text.Text = "STOP TWEEN"
-  Text.TextColor3 = Color3.fromRGB(225, 225, 225)
-  Text.TextSize = 20
-  Text.Font = Enum.Font.GothamBold
-  Text.TextXAlignment = Enum.TextXAlignment.Center
-  Text.TextYAlignment = Enum.TextYAlignment.Center
-
-  local function StopAllFarm()
-    -- stop tween
-    shouldTween = false
-    pcall(function()
-      if _G.TweenCache then
-        _G.TweenCache:Cancel()
-        _G.TweenCache = nil
-      end
-    end)
-
-    -- major farm flags
-    local flags = {
-      "Level","AutoFarmNear","AutoFarmChest","AutoChestBP","AutoFarmIsland","AutoFarm_Bone",
-      "Auto_Cake_Prince","AutoDoughKing","AutoAttackDoughKing","FarmEliteHunt","FarmEliteHop",
-      "AutoEctoplasm","AutoBerry","AutoFarmRaid","AutoRaidCastle","AutoKillMob","AutoFarmDungeon",
-      "AutoFarmCandy","MasterAutoLevel","MasterAutoCandy","AutoSaber","CitizenQuest","Bartilo_Quest",
-      "AutoPole","AutoPoleV2","Auto_SuperHuman","AutoDeathStep","Auto_SharkMan_Karate",
-      "Auto_Electric_Claw","AutoDragonTalon","Auto_God_Human","Auto_Tushita","Auto_Soul_Guitar",
-      "AutoKenVTWO","AutoSerpentBow","AutoFMon","AutoMatSoul","obsFarm","AutoBigmom","Doughv2",
-      "AuraBoss","Raiding","Auto_Cavender","TpPly","AutoZou","AutoSaw","AutoTridentW2",
-      "AutoEvoRace","AutoGetQuestBounty","Defeating","DummyMan","Auto_Yama","Auto_SwanGG",
-      "AutoEcBoss","Auto_Mink","Auto_Human","Auto_Skypiea","Auto_Fish","CDK","CDK_TS","CDK_YM",
-      "AutoFarmGodChalice","FarmGodChalice","AutoFistDarkness","AutoMiror","Teleport","AutoKilo",
-      "AutoGetUsoap","Praying","TryLucky","AutoColShad","AutoUnHaki","Auto_DonAcces","AutoRipIngay",
-      "AutoAttackRipIndra","DragoV3","DragoV1","SailBoats","SailBoat_Hydra","WardenBoss","AutoFactory",
-      "HighestMirage","HCM","PGB","Leviathan1","Complete_Trials","AutoFireFlowers","Prehis_Skills",
-      "FarmBlazeEM","Dojoo","CollectPresent","AutoLawKak","TpLab","AutoPhoenixF","AutoHytHallow",
-      "LongsWord","BlackSpikey","AutoHolyTorch","TrainDrago","FarmMastery_Dev","KeysRen",
-      "Auto_Rainbow_Haki","Shark","TerrorShark","Piranha","MobCrew","SeaBeast1","FishBoat",
-      "FindMirage","FarmChestM","TwinHook","TPNpc","Addealer","AcientOne","CraftVM","FrozenTP",
-      "TPDoor","TPGEAR","AutoStartPrehistoric","AutoPlayerHunter","SafeMode","StartEvent",
-      "AutoMysticIsland","AutoChipFruit","AutoChipBeli","AutoHop_Dough","StopWhenChalice",
-      "AutoTP_Gift","AutoTPGift","AutoTPAndCollect","TPFloor1","TPFloor2","TPFloor3","TPFloor4",
-      "ClosetMons","FactoryRaids","CastleRaids"
-    }
-    for _, k in ipairs(flags) do
-      pcall(function() _G[k] = false end)
-    end
-    pcall(function() getgenv().AutoMaterial = false end)
-    pcall(function() getgenv().OnFarm = false end)
-    pcall(function() getgenv().Set = false end)
-
-    -- try update UI toggles if library supports Set
-    local toggleObjs = {
-      FarmLevel, ClosetMons, FactoryRaids, CastleRaids, Ecto, ChestTW, ChestBP, Berry, BerryH,
-      EliteQ, EliteH, Cake, CakeQ, CakeSM
-    }
-    for _, t in ipairs(toggleObjs) do
-      pcall(function()
-        if t then
-          if t.Set then t:Set(false)
-          elseif t.SetValue then t:SetValue(false)
-          elseif type(t) == "table" and t.Value ~= nil then t.Value = false
-          end
-        end
-      end)
-    end
-
-    print("[NYANN OS] STOP TWEEN -> all farm OFF")
-  end
-
-  StopButton.MouseButton1Click:Connect(function()
-    StopAllFarm()
-    Text.Text = "STOPPED"
-    task.wait(0.7)
-    Text.Text = "STOP TWEEN"
-  end)
-
-  StopButton.TouchTap:Connect(function()
-    StopAllFarm()
-    Text.Text = "STOPPED"
-    task.wait(0.7)
-    Text.Text = "STOP TWEEN"
-  end)
-
-  -- drag
-  local Dragging, DragStart, StartPosition
-  StopButton.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1
-      or Input.UserInputType == Enum.UserInputType.Touch then
-      Dragging = true
-      DragStart = Input.Position
-      StartPosition = StopButton.Position
-    end
-  end)
-  StopButton.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1
-      or Input.UserInputType == Enum.UserInputType.Touch then
-      Dragging = false
-    end
-  end)
-  UserInputService.InputChanged:Connect(function(Input)
-    if not Dragging then return end
-    if Input.UserInputType ~= Enum.UserInputType.MouseMovement
-      and Input.UserInputType ~= Enum.UserInputType.Touch then return end
-    local Delta = Input.Position - DragStart
-    StopButton.Position = UDim2.new(
-      StartPosition.X.Scale, StartPosition.X.Offset + Delta.X,
-      StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y
-    )
-  end)
-
-  getgenv().NyannStopAllFarm = StopAllFarm
-  print("[NYANN OS] STOP TWEEN UI LOADED")
-end
