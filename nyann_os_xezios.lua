@@ -1768,8 +1768,8 @@ do
 
   local btn = Instance.new("ImageButton")
   btn.Name = "MinimizeBtn"
-  btn.Size = UDim2.new(0, 62, 0, 62) -- larger square
-  btn.Position = UDim2.new(0.08, 0, 0.35, 0)
+  btn.Size = UDim2.new(0, 68, 0, 68) -- larger square
+  btn.Position = UDim2.new(0, 14, 0, 90) -- cao hơn (top-left)
   btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
   btn.BackgroundTransparency = 0
   btn.BorderSizePixel = 0
@@ -2608,7 +2608,7 @@ ChestBP = Tabs.Main:AddToggle({
 StopI = Tabs.Main:AddToggle({
 Name = "Stop Items", 
 Description = "", 
-Default = true,
+Default = true, -- auto ON
 Callback = function(Value)
     _G.StopWhenChalice = Value
 end})
@@ -4695,7 +4695,7 @@ end)
 
 Tabs.Settings:AddToggle({
     Name = "Anti AFK",
-    Default = true,
+    Default = true, -- auto ON
     Callback = function(Value)
         if Value then
             local vu = game:GetService("VirtualUser")
