@@ -633,8 +633,8 @@ sea2 = (game.PlaceId == 4442272183 or game.PlaceId == 79091703265657)
 sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
-    ["Tween Speed"] = 350,
-    ["Bypass Teleport"] = true,
+    ["Tween Speed"] = 1.5, -- bay (duration = distance/(100*speed))
+    ["Bypass Teleport"] = false, -- tắt bypass reset (gây lỗi farm Cake/Bone/Level)
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
     ["Same Y"] = false
@@ -809,26 +809,9 @@ function GetBypassCFrame(x)
 end
 
 function BypassTP(Target)
-    local Character = LocalPlayer.Character
-    if not Character then return end
-    
-    local Humanoid = WaitForHumanoid()
-    if not Humanoid or Humanoid.Health <= 0 then return end
-    
-    if CanBypassTeleport(Target) and GetBypassCFrame(Target) then
-        local TargetTP = GetBypassCFrame(Target)
-        if TargetTP and TargetTP:FindFirstChild("Part") then
-            Character.LastSpawnPoint.Disabled = true
-            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetLastSpawnPoint", TargetTP.Name)
-            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetSpawnPoint")
-            Character:PivotTo(TargetTP.Part.CFrame)
-            Humanoid:ChangeState(15)
-            
-            repeat 
-                task.wait() 
-            until LocalPlayer.Character and WaitForHumanoid() and WaitForHumanoid().Health > 0
-        end
-    end
+    -- Không dùng reset/kill (ChangeState 15) — dễ lỗi khi farm Cake / Bone / Level
+    -- Chỉ tween bình thường qua _tp
+    return
 end
 
 function totopofgreattree()
@@ -932,8 +915,10 @@ _tp = function(target)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local rootPart = character.HumanoidRootPart
     
+    -- Không bypass-reset khi đang farm Cake / Bone / Level
+    local skipBypass = _G.Auto_Cake_Prince or _G.AutoFarm_Bone or _G.Level or _G.AutoFarmNear
     pcall(function()
-        if CanBypassTeleport(gg) then
+        if not skipBypass and Settings["Bypass Teleport"] and CanBypassTeleport(gg) then
             BypassTP(gg)
             task.wait(0.5)
         end
@@ -966,7 +951,7 @@ _tp = function(target)
     end
     
     local distance = (gg.Position - rootPart.Position).Magnitude
-    local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
+    local tweenInfo = TweenInfo.new(distance / math.max(50, (Settings["Tween Speed"] or 1.5) * 100), Enum.EasingStyle.Linear)
     local tween = game:GetService("TweenService"):Create(block, tweenInfo, {CFrame = gg})    
     
     if plr.Character.Humanoid.Sit == true then
@@ -1359,6 +1344,7 @@ do
   local ok, res = pcall(function()
     local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/Library.lua.txt")
     if type(src) ~= "string" or #src < 1000 then error("empty") end
+    -- keep Xova native minimize (Pillow)
     -- Patch pink accents -> white before load
     src = src:gsub("Color3%.fromRGB%(255,%s*0,%s*127%)", "Color3.fromRGB(255, 255, 255)")
     src = src:gsub("Color3%.fromRGB%(255,%s*0,%s*128%)", "Color3.fromRGB(255, 255, 255)")
@@ -1625,101 +1611,26 @@ local function ToggleXovaMenu(force)
 end
 getgenv().NyannToggleMenu = ToggleXovaMenu
 
--- ========================================
--- MINIMIZE ICON (keep) - rbxassetid://94678517792779
--- ========================================
-do
-  local CoreGui = game:GetService("CoreGui")
-  local UIS = game:GetService("UserInputService")
 
-  local sg = Instance.new("ScreenGui")
-  sg.Name = "NyannMinimizeIcon"
-  sg.ResetOnSpawn = false
-  sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-  sg.DisplayOrder = 999
-  pcall(function() sg.Parent = CoreGui end)
-  if not sg.Parent then
-    pcall(function() sg.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end)
+
+
+-- Chỉ giữ minimize Xova — xoá mọi minimize custom
+pcall(function()
+  local function wipe(parent)
+    if not parent then return end
+    for _, v in ipairs(parent:GetChildren()) do
+      local n = tostring(v.Name):lower()
+      if n == "nyannminimizeicon" or n:find("nyannmin") or n == "minimizebtn" then
+        pcall(function() v:Destroy() end)
+      end
+    end
   end
+  wipe(game:GetService("CoreGui"))
+  local pg = game.Players.LocalPlayer and game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+  wipe(pg)
+end)
 
-  local btn = Instance.new("ImageButton")
-  btn.Name = "MinimizeBtn"
-  btn.Size = UDim2.new(0, 48, 0, 48)
-  btn.Position = UDim2.new(0.08, 0, 0.35, 0)
-  btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-  btn.BorderSizePixel = 0
-  btn.Image = "rbxassetid://94678517792779"
-  btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-  btn.ScaleType = Enum.ScaleType.Fit
-  btn.Parent = sg
-
-  local corner = Instance.new("UICorner")
-  corner.CornerRadius = UDim.new(1, 0)
-  corner.Parent = btn
-
-  local stroke = Instance.new("UIStroke")
-  stroke.Color = Color3.fromRGB(255, 255, 255)
-  stroke.Thickness = 1.5
-  stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  stroke.Parent = btn
-
-  local dragging, dragStart, startPos, dragInput
-  local function update(input)
-    local delta = input.Position - dragStart
-    btn.Position = UDim2.new(
-      startPos.X.Scale, startPos.X.Offset + delta.X,
-      startPos.Y.Scale, startPos.Y.Offset + delta.Y
-    )
-  end
-
-  btn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-      or input.UserInputType == Enum.UserInputType.Touch then
-      dragging = true
-      dragStart = input.Position
-      startPos = btn.Position
-      input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then
-          dragging = false
-        end
-      end)
-    end
-  end)
-
-  btn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-      or input.UserInputType == Enum.UserInputType.Touch then
-      dragInput = input
-    end
-  end)
-
-  UIS.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-      update(input)
-    end
-  end)
-
-  local clickPos
-  btn.MouseButton1Down:Connect(function()
-    clickPos = UIS:GetMouseLocation()
-  end)
-  btn.MouseButton1Click:Connect(function()
-    local now = UIS:GetMouseLocation()
-    if clickPos and (now - clickPos).Magnitude > 12 then return end
-    ToggleXovaMenu()
-  end)
-
-  UIS.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.LeftControl then
-      ToggleXovaMenu()
-    end
-  end)
-
-  print("[nyann os] Minimize icon ready")
-end
-
-print("[nyann os] Xova menu ready")
+print("[nyann os] Xova menu ready (minimize Xova only)")
 
 local Tabs = {
     Info = Window:MakeTab({ Title = "Info And Status", Icon = "" }),
@@ -3300,6 +3211,19 @@ Cake = Tabs.Main:AddToggle({
     Default = false,
     Callback = function(Value)
     _G.Auto_Cake_Prince = Value
+    if Value then
+      -- bay tới đảo Cake (tween, không reset)
+      task.spawn(function()
+        pcall(function()
+          local cakeCF = CFrame.new(-2077, 252, -12373)
+          local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+          if hrp and (hrp.Position - cakeCF.Position).Magnitude > 200 then
+            shouldTween = true
+            _tp(cakeCF)
+          end
+        end)
+      end)
+    end
 end
 })
 
@@ -3569,6 +3493,19 @@ Tabs.Main:AddToggle({
     Default = false,
     Callback = function(Value)
         _G.AutoFarm_Bone = Value
+        if Value then
+          -- bay tới khu Bone (Haunted Castle)
+          task.spawn(function()
+            pcall(function()
+              local boneCF = CFrame.new(-8764, 142, 5963) -- Reborn Skeleton
+              local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+              if hrp and (hrp.Position - boneCF.Position).Magnitude > 200 then
+                shouldTween = true
+                _tp(boneCF)
+              end
+            end)
+          end)
+        end
     end
 })
 
