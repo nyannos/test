@@ -633,7 +633,7 @@ sea2 = (game.PlaceId == 4442272183 or game.PlaceId == 79091703265657)
 sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
-    ["Tween Speed"] = 350,
+    ["Tween Speed"] = 1.5, -- bay (duration = distance/(100*speed))
     ["Bypass Teleport"] = true,
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
@@ -966,7 +966,7 @@ _tp = function(target)
     end
     
     local distance = (gg.Position - rootPart.Position).Magnitude
-    local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
+    local tweenInfo = TweenInfo.new(distance / math.max(50, (Settings["Tween Speed"] or 1.5) * 100), Enum.EasingStyle.Linear)
     local tween = game:GetService("TweenService"):Create(block, tweenInfo, {CFrame = gg})    
     
     if plr.Character.Humanoid.Sit == true then
@@ -1352,6 +1352,7 @@ end
 
 -- ========================================
 -- HOHO HUB UI (Black & White) + shim Tabs.* + Minimize
+-- https://raw.githubusercontent.com/acsu123/HOHO_H/main/hoho_lib.lua
 -- ========================================
 print("[nyann os] loading HoHo UI...")
 
@@ -1360,7 +1361,7 @@ do
   local ok, res = pcall(function()
     local src = game:HttpGet("https://raw.githubusercontent.com/acsu123/HOHO_H/main/hoho_lib.lua")
     if type(src) ~= "string" or #src < 1000 then error("empty hoho lib") end
-    -- B&W patches
+    -- B&W theme patches
     src = src:gsub("Color3%.fromRGB%(0,%s*170,%s*255%)", "Color3.fromRGB(255, 255, 255)")
     src = src:gsub("Color3%.fromRGB%(0,%s*255,%s*127%)", "Color3.fromRGB(220, 220, 220)")
     src = src:gsub("Color3%.fromRGB%(85,%s*255,%s*127%)", "Color3.fromRGB(230, 230, 230)")
@@ -1369,7 +1370,7 @@ do
     src = src:gsub("Color3%.fromRGB%(255,%s*85,%s*0%)", "Color3.fromRGB(180, 180, 180)")
     src = src:gsub("Color3%.fromRGB%(27,%s*42,%s*53%)", "Color3.fromRGB(18, 18, 18)")
     src = src:gsub("Color3%.new%(0%.333333,%s*0%.666667,%s*1%)", "Color3.fromRGB(255, 255, 255)")
-    -- Bigger window (450x272 -> 620x400)
+    -- bigger window
     src = src:gsub('Top_Bar%.Size = UDim2%.new%(0, 450, 0, 24%)', 'Top_Bar.Size = UDim2.new(0, 620, 0, 28)')
     src = src:gsub('BlackBackground%.Size = UDim2%.new%(0, 450, 0, 272%)', 'BlackBackground.Size = UDim2.new(0, 620, 0, 400)')
     src = src:gsub('VideoBackground%.Size = UDim2%.new%(0, 450, 0, 272%)', 'VideoBackground.Size = UDim2.new(0, 620, 0, 400)')
@@ -1383,22 +1384,14 @@ do
     src = src:gsub('TabFrame%.Size = UDim2%.new%(0, 313, 0, 264%)', 'TabFrame.Size = UDim2.new(0, 445, 0, 388)')
     src = src:gsub('FixBetter%.Size = UDim2%.new%(0, 450, 0, 14%)', 'FixBetter.Size = UDim2.new(0, 620, 0, 14)')
     src = src:gsub('TrueGame%.Size = UDim2%.new%(0, 332, 0, 17%)', 'TrueGame.Size = UDim2.new(0, 480, 0, 20)')
-    -- content controls wider
     src = src:gsub('UDim2%.new%(0, 307, 0, 27%)', 'UDim2.new(0, 430, 0, 30)')
     src = src:gsub('UDim2%.new%(0, 307, 0, 32%)', 'UDim2.new(0, 430, 0, 34)')
     src = src:gsub('UDim2%.new%(0, 307, 0, 36%)', 'UDim2.new(0, 430, 0, 38)')
     src = src:gsub('UDim2%.new%(0, 307, 0, 30%)', 'UDim2.new(0, 430, 0, 32)')
     src = src:gsub('UDim2%.new%(0, 307, 0, 139%)', 'UDim2.new(0, 430, 0, 160)')
-    -- minimize tween sizes
     src = src:gsub('Size = UDim2%.new%(0, 450,0, 6%)', 'Size = UDim2.new(0, 620,0, 6)')
     src = src:gsub('Size = UDim2%.new%(0, 450,0, 272%)', 'Size = UDim2.new(0, 620,0, 400)')
-    -- Toggle knob: OFF = black, ON = white
-    src = src:gsub(
-      'ClickThis%.BackgroundColor3 = Color3%.fromRGB%(255, 255, 255%)',
-      'ClickThis.BackgroundColor3 = Color3.fromRGB(20, 20, 20)'
-    )
-    -- when toggled true uses main_color (white) - good
-    -- when toggled false sets to white in original - force black
+    -- toggle OFF = black
     src = src:gsub(
       'ClickThis%.BackgroundColor3 = Color3%.fromRGB%(255, 255, 255%)',
       'ClickThis.BackgroundColor3 = Color3.fromRGB(20, 20, 20)'
@@ -1414,65 +1407,29 @@ do
   print("[nyann os] HoHo OK (B&W)")
 end
 
-local RealWindow = lib:Window("nyann os", "by real _@nyannnokonoko", Color3.fromRGB(255, 255, 255))
+local RealWindow = lib:Window("nyann os by real_@nyannnokonoko", "Version 2", Color3.fromRGB(255, 255, 255))
 
--- Center menu on screen + scale fix
+-- Center menu
 task.defer(function()
-  task.wait(0.15)
+  task.wait(0.2)
   pcall(function()
-    local gui = game:GetService("CoreGui"):FindFirstChild("Hoho_Hub")
-    if not gui then
-      for _, v in ipairs(game:GetService("CoreGui"):GetChildren()) do
-        if tostring(v.Name):lower():find("hoho") then gui = v break end
+    local gui
+    for _, v in ipairs(game:GetService("CoreGui"):GetChildren()) do
+      if tostring(v.Name):lower():find("hoho") or v.Name == "Hoho_Hub" then
+        gui = v
+        break
       end
     end
     if not gui then return end
     local top = gui:FindFirstChild("Top_Bar") or gui:FindFirstChildWhichIsA("Frame")
     if top then
-      -- center: window ~620 x 428
       top.AnchorPoint = Vector2.new(0.5, 0.5)
       top.Position = UDim2.new(0.5, 0, 0.5, 0)
-      if top.Size.X.Offset < 500 then
-        top.Size = UDim2.new(0, 620, 0, 28)
-      end
-      local bg = top:FindFirstChild("BlackBackground")
-      if bg then
-        bg.Size = UDim2.new(0, 620, 0, 400)
-      end
     end
   end)
 end)
 
--- Force toggle buttons black (off) / white (on)
-task.spawn(function()
-  local function fixToggles(root)
-    for _, d in ipairs(root:GetDescendants()) do
-      if d.Name == "ClickThis" and d:IsA("TextButton") then
-        -- if currently light and not "on", set black; leave white alone if already on
-        pcall(function()
-          local col = d.BackgroundColor3
-          local r,g,b = col.R*255, col.G*255, col.B*255
-          -- pure white default off-state from lib -> black
-          if r > 240 and g > 240 and b > 240 then
-            d.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-          end
-        end)
-      end
-    end
-  end
-  for i = 1, 12 do
-    task.wait(0.4)
-    pcall(function()
-      for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
-        if tostring(gui.Name):lower():find("hoho") or gui.Name == "Hoho_Hub" then
-          fixToggles(gui)
-        end
-      end
-    end)
-  end
-end)
-
--- Post-fix remaining colorful pixels
+-- Post-fix leftover blue/cyan
 task.defer(function()
   task.wait(0.5)
   pcall(function()
@@ -1500,7 +1457,7 @@ task.defer(function()
   end)
 end)
 
--- Shim: Tabs.* (redzlib style) -> HoHo Tab API
+-- Shim Tabs.* -> HoHo
 local function MakeTabShim(tabPage)
   local tab = {}
 
@@ -1661,7 +1618,6 @@ local redzlib = {
   Notify = function(_, opts) Window:Notify(opts) end
 }
 
--- Toggle HoHo menu
 local function FindHoHoGui()
   local cg = game:GetService("CoreGui")
   local g = cg:FindFirstChild("Hoho_Hub")
@@ -1681,10 +1637,12 @@ local function ToggleHoHoMenu(force)
 end
 getgenv().NyannToggleMenu = ToggleHoHoMenu
 
--- MINIMIZE ICON
+-- MINIMIZE: square, no white border, larger, higher
 do
   local CoreGui = game:GetService("CoreGui")
   local UIS = game:GetService("UserInputService")
+  local TweenService = game:GetService("TweenService")
+  local MinimizeBusy = false
 
   pcall(function()
     local old = CoreGui:FindFirstChild("NyannMinimizeIcon")
@@ -1694,6 +1652,7 @@ do
   local sg = Instance.new("ScreenGui")
   sg.Name = "NyannMinimizeIcon"
   sg.ResetOnSpawn = false
+  sg.IgnoreGuiInset = true
   sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
   sg.DisplayOrder = 999
   pcall(function() sg.Parent = CoreGui end)
@@ -1703,9 +1662,9 @@ do
 
   local btn = Instance.new("ImageButton")
   btn.Name = "MinimizeBtn"
-  btn.Size = UDim2.new(0, 48, 0, 48)
-  btn.Position = UDim2.new(0.08, 0, 0.35, 0)
-  btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+  btn.Size = UDim2.new(0, 68, 0, 68)
+  btn.Position = UDim2.new(0, 14, 0, 90)
+  btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
   btn.BorderSizePixel = 0
   btn.Image = "rbxassetid://94678517792779"
   btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
@@ -1713,14 +1672,22 @@ do
   btn.Parent = sg
 
   local corner = Instance.new("UICorner")
-  corner.CornerRadius = UDim.new(1, 0)
+  corner.CornerRadius = UDim.new(0, 8)
   corner.Parent = btn
 
-  local stroke = Instance.new("UIStroke")
-  stroke.Color = Color3.fromRGB(255, 255, 255)
-  stroke.Thickness = 1.5
-  stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  stroke.Parent = btn
+  local function SpinOnce(degrees, duration)
+    duration = duration or 0.35
+    local startR = btn.Rotation
+    local goal = startR + degrees
+    local tw = TweenService:Create(
+      btn,
+      TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+      { Rotation = goal }
+    )
+    tw:Play()
+    tw.Completed:Wait()
+    btn.Rotation = goal % 360
+  end
 
   local dragging, dragStart, startPos, dragInput
   local function update(input)
@@ -1755,19 +1722,41 @@ do
   local clickPos
   btn.MouseButton1Down:Connect(function() clickPos = UIS:GetMouseLocation() end)
   btn.MouseButton1Click:Connect(function()
+    if MinimizeBusy then return end
     local now = UIS:GetMouseLocation()
     if clickPos and (now - clickPos).Magnitude > 12 then return end
-    ToggleHoHoMenu()
+    MinimizeBusy = true
+    task.spawn(function()
+      if MenuVisible then
+        pcall(function() SpinOnce(-360, 0.4) end)
+        ToggleHoHoMenu(false)
+      else
+        pcall(function() SpinOnce(360, 0.4) end)
+        ToggleHoHoMenu(true)
+      end
+      MinimizeBusy = false
+    end)
   end)
 
   UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.LeftControl then
-      ToggleHoHoMenu()
+      if MinimizeBusy then return end
+      MinimizeBusy = true
+      task.spawn(function()
+        if MenuVisible then
+          pcall(function() SpinOnce(-360, 0.4) end)
+          ToggleHoHoMenu(false)
+        else
+          pcall(function() SpinOnce(360, 0.4) end)
+          ToggleHoHoMenu(true)
+        end
+        MinimizeBusy = false
+      end)
     end
   end)
 
-  print("[nyann os] Minimize icon ready")
+  print("[nyann os] Minimize icon ready (square + spin)")
 end
 
 print("[nyann os] HoHo menu ready")
@@ -1786,7 +1775,7 @@ local Tabs = {
     Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
     Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
     Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
-    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://" }),
+    Shop = Window:MakeTab({ Title = "Shop", Icon = "rbxassetid://" }),
     Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
 }
 
@@ -2532,7 +2521,7 @@ ChestBP = Tabs.Main:AddToggle({
 StopI = Tabs.Main:AddToggle({
 Name = "Stop Items", 
 Description = "", 
-Default = true,
+Default = true, -- auto ON
 Callback = function(Value)
     _G.StopWhenChalice = Value
 end})
@@ -4450,6 +4439,31 @@ spawn(function()
     end)
   end
 end)
+
+-- Auto ON khi chạy script: Fast Attack + Bring + Buso + Spin XYZ + Stop Items + Anti AFK
+task.defer(function()
+  task.wait(0.35)
+  _G.Seriality = true
+  _B = true
+  Boud = true
+  RandomCFrame = true
+  _G.StopWhenChalice = true
+  -- Anti AFK
+  pcall(function()
+    local vu = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+      vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+      task.wait(1)
+      vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    end)
+  end)
+  pcall(function() if Initialize and Initialize.Set then Initialize:Set(true) end end)
+  pcall(function() if Bringmob and Bringmob.Set then Bringmob:Set(true) end end)
+  pcall(function() if BusuAura and BusuAura.Set then BusuAura:Set(true) end end)
+  pcall(function() if RandomAround and RandomAround.Set then RandomAround:Set(true) end end)
+  pcall(function() if StopI and StopI.Set then StopI:Set(true) end end)
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso / Spin XYZ / Stop Items / Anti AFK")
+end)
 Tabs.Settings:AddToggle({
     Name = "Auto Haki Observation",
     Default = false,
@@ -4508,7 +4522,7 @@ end)
 RandomAround = Tabs.Settings:AddToggle({
 Name = "Auto Turn on Spin  xyz", 
 Description = "", 
-Default = false,
+Default = true,
 Callback = function(Value)
   RandomCFrame = Value
 end})
@@ -4594,7 +4608,7 @@ end)
 
 Tabs.Settings:AddToggle({
     Name = "Anti AFK",
-    Default = true,
+    Default = true, -- auto ON
     Callback = function(Value)
         if Value then
             local vu = game:GetService("VirtualUser")
