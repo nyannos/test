@@ -1768,7 +1768,7 @@ do
 
   local btn = Instance.new("ImageButton")
   btn.Name = "MinimizeBtn"
-  btn.Size = UDim2.new(0, 48, 0, 48) -- slightly bigger icon
+  btn.Size = UDim2.new(0, 62, 0, 62) -- larger square
   btn.Position = UDim2.new(0.08, 0, 0.35, 0)
   btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
   btn.BackgroundTransparency = 0
@@ -1778,15 +1778,11 @@ do
   btn.ScaleType = Enum.ScaleType.Fit
   btn.Parent = sg
 
+  -- square (slight soft corner only)
   local corner = Instance.new("UICorner")
-  corner.CornerRadius = UDim.new(1, 0) -- full circle
+  corner.CornerRadius = UDim.new(0, 6)
   corner.Parent = btn
-
-  local stroke = Instance.new("UIStroke")
-  stroke.Color = Color3.fromRGB(255, 255, 255) -- white border
-  stroke.Thickness = 1.5
-  stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  stroke.Parent = btn
+  -- no white stroke / border
 
   -- Drag
   local dragging, dragStart, startPos, dragInput
@@ -4531,16 +4527,20 @@ spawn(function()
   end
 end)
 
--- Auto ON khi chạy script: Fast Attack + Bring + Buso
+-- Auto ON khi chạy script: Fast Attack + Bring + Buso + Spin XYZ + Stop Items
 task.defer(function()
-  task.wait(0.25)
+  task.wait(0.35)
   _G.Seriality = true
   _B = true
   Boud = true
+  RandomCFrame = true
+  _G.StopWhenChalice = true
   pcall(function() if Initialize and Initialize.Set then Initialize:Set(true) end end)
   pcall(function() if Bringmob and Bringmob.Set then Bringmob:Set(true) end end)
   pcall(function() if BusuAura and BusuAura.Set then BusuAura:Set(true) end end)
-  print("[nyann os] Auto ON: Fast Attack / Bring / Buso")
+  pcall(function() if RandomAround and RandomAround.Set then RandomAround:Set(true) end end)
+  pcall(function() if StopI and StopI.Set then StopI:Set(true) end end)
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso / Spin XYZ / Stop Items")
 end)
 Tabs.Settings:AddToggle({
     Name = "Auto Haki Observation",
@@ -4600,7 +4600,7 @@ end)
 RandomAround = Tabs.Settings:AddToggle({
 Name = "Auto Turn on Spin  xyz", 
 Description = "", 
-Default = false,
+Default = true,
 Callback = function(Value)
   RandomCFrame = Value
 end})
