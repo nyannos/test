@@ -633,7 +633,7 @@ sea2 = (game.PlaceId == 4442272183 or game.PlaceId == 79091703265657)
 sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
-    ["Tween Speed"] = 350,
+    ["Tween Speed"] = 1.5, -- bay chậm hơn (duration = distance/(100*speed))
     ["Bypass Teleport"] = true,
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
@@ -966,7 +966,7 @@ _tp = function(target)
     end
     
     local distance = (gg.Position - rootPart.Position).Magnitude
-    local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
+    local tweenInfo = TweenInfo.new(distance / math.max(50, (Settings["Tween Speed"] or 1.5) * 100), Enum.EasingStyle.Linear)
     local tween = game:GetService("TweenService"):Create(block, tweenInfo, {CFrame = gg})    
     
     if plr.Character.Humanoid.Sit == true then
@@ -1688,15 +1688,30 @@ end
 
 function Window:Notify(opts)
   opts = opts or {}
-  local msg = tostring(opts.Content or opts.Message or opts.Title or "nyann os")
+  local title = tostring(opts.Title or opts.Name or "nyann os")
+  local msg = tostring(opts.Content or opts.Message or "")
+  local dur = opts.Duration or 4
+  -- Prefer Alurt (B&W) if loaded
+  if getgenv().NyannAlurt and getgenv().NyannAlurt.CreateNode then
+    pcall(function()
+      getgenv().NyannAlurt.CreateNode({
+        Title = title,
+        Content = msg,
+        Length = dur,
+        Image = opts.Image or "rbxassetid://17616650704",
+        BarColor = Color3.fromRGB(255, 255, 255),
+      })
+    end)
+    return
+  end
   pcall(function()
     if Library and Library.Notifications and Library.Notifications.Create then
-      Library.Notifications:Create({ Name = msg })
+      Library.Notifications:Create({ Name = title .. (msg ~= "" and (": " .. msg) or "") })
     else
       game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = tostring(opts.Title or "nyann os"),
+        Title = title,
         Text = msg,
-        Duration = opts.Duration or 4,
+        Duration = dur,
       })
     end
   end)
@@ -1839,7 +1854,7 @@ print("[nyann os] Xezios menu ready")
 
 local Tabs = {
     Info = Window:MakeTab({ Title = "Info And Status", Icon = "" }),
-    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://" }),
+    Main = Window:MakeTab({ Title = "Main", Icon = "rbxassetid://" }),
     Font = Window:MakeTab({ Title = "Font", Icon = "rbxassetid://" }),
     Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://" }),
     Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://" }),
@@ -1851,8 +1866,7 @@ local Tabs = {
     Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
     Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
     Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
-    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://" }),
-    Music = Window:MakeTab({ Title = "Music", Icon = "rbxassetid://6031068420" }),
+    Shop = Window:MakeTab({ Title = "Shop", Icon = "rbxassetid://" }),
     Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
 }
 
@@ -1864,6 +1878,42 @@ Tabs.Info:AddDiscordInvite({
 	Banner = "rbxassetid://94678517792779", 
 	Logo = "rbxassetid://94678517792779",
 	Invite = "https://discord.gg/k6MRH4KxTv",
+	Members = 36, 
+	Online = 67, 
+})
+Tabs.Info:AddDiscordInvite({
+	Title = "Máy chủ siêu cấp lá đu đủ ☠️",
+	Description = "Sever discord.",
+	Banner = "rbxassetid://94678517792779", 
+	Logo = "rbxassetid://94678517792779",
+	Invite = "https://discord.gg/3zuHDZCybR",
+	Members = 36, 
+	Online = 67, 
+})
+Tabs.Info:AddDiscordInvite({
+	Title = "Facebook",
+	Description = "Facebook.",
+	Banner = "rbxassetid://94678517792779", 
+	Logo = "rbxassetid://94678517792779",
+	Invite = "https://www.facebook.com/share/1MFxSYvpAS/",
+	Members = 36, 
+	Online = 67, 
+})
+Tabs.Info:AddDiscordInvite({
+	Title = "Tiktok",
+	Description = "Tiktok.",
+	Banner = "rbxassetid://94678517792779", 
+	Logo = "rbxassetid://94678517792779",
+	Invite = "tiktok.com/@dev_nyann",
+	Members = 36, 
+	Online = 67, 
+})
+Tabs.Info:AddDiscordInvite({
+	Title = "Instagram",
+	Description = "Instagram.",
+	Banner = "rbxassetid://94678517792779", 
+	Logo = "rbxassetid://94678517792779",
+	Invite = "https://www.instagram.com/ttd.213?igsh=N2ljc3A4NTQ0ZW9n",
 	Members = 36, 
 	Online = 67, 
 })
@@ -4470,6 +4520,24 @@ Default = true,
 Callback = function(Value)
   Boud = Value
 end})
+
+-- Auto-enable core settings when menu loads
+task.defer(function()
+  task.wait(0.3)
+  _G.Seriality = true
+  _B = true
+  Boud = true
+  pcall(function()
+    if Initialize and Initialize.Set then Initialize:Set(true) end
+  end)
+  pcall(function()
+    if Bringmob and Bringmob.Set then Bringmob:Set(true) end
+  end)
+  pcall(function()
+    if BusuAura and BusuAura.Set then BusuAura:Set(true) end
+  end)
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso")
+end)
 spawn(function()
   while wait(Sec) do
     pcall(function()
@@ -11755,399 +11823,6 @@ Tabs.Shop:AddButton({
     end
 })
 
--- =========================================================
--- MUSIC PLAYER + VOLUME (Miscellaneous)
--- Playlist: https://pastefy.app/0QU2aU7c/raw
--- =========================================================
-Tabs.Music:AddSection("Music Player", "Left")
-
-_G.MusicVolume = _G.MusicVolume or 0.6
-_G.GameVolume = _G.GameVolume or 1
-_G.MuteGame = _G.MuteGame or false
-_G.MusicPlaying = false
-_G.MusicLoop = true
-_G.SelectedSong = _G.SelectedSong or nil
-
-local MusicFolder = "nyann_os_music"
-pcall(function()
-  if makefolder and not isfolder(MusicFolder) then makefolder(MusicFolder) end
-end)
-
-local MusicSound = Instance.new("Sound")
-MusicSound.Name = "NyannMusicPlayer"
-MusicSound.Looped = true
-MusicSound.Volume = _G.MusicVolume
-MusicSound.Parent = game:GetService("SoundService")
-
-local Playlist = {}
-local SongNames = {}
-local SongMap = {} -- name -> entry
-
-pcall(function()
-  local HttpService = game:GetService("HttpService")
-  local raw = game:HttpGet("https://pastefy.app/0QU2aU7c/raw")
-  local data = HttpService:JSONDecode(raw)
-  if type(data) == "table" then
-    for _, song in ipairs(data) do
-      if song.name and song.download_url then
-        local label = tostring(song.name)
-        if song.artist and song.artist ~= "" then
-          label = label .. " — " .. tostring(song.artist)
-        end
-        table.insert(Playlist, song)
-        table.insert(SongNames, label)
-        SongMap[label] = song
-      end
-    end
-  end
-end)
-
-if #SongNames == 0 then
-  SongNames = {"(Playlist load failed)"}
-end
-
-local function StopMusic()
-  pcall(function()
-    MusicSound:Stop()
-    MusicSound.SoundId = ""
-  end)
-  _G.MusicPlaying = false
-end
-
-local function PlaySong(label)
-  local entry = SongMap[label]
-  if not entry or not entry.download_url then
-    pcall(function()
-      Window:Notify({ Title = "Music", Content = "Song not found", Duration = 3 })
-    end)
-    return
-  end
-
-  _G.SelectedSong = label
-  StopMusic()
-
-  task.spawn(function()
-    local ok, err = pcall(function()
-      local url = entry.download_url
-      local safeName = (entry.name or "track"):gsub("[^%w%-%_ ]", ""):gsub("%s+", "_")
-      if #safeName < 2 then safeName = "track" end
-      local filePath = MusicFolder .. "/" .. safeName .. ".mp3"
-
-      -- download if needed
-      if not (isfile and isfile(filePath)) then
-        local body = game:HttpGet(url)
-        if type(body) ~= "string" or #body < 1000 then
-          error("download failed")
-        end
-        writefile(filePath, body)
-      end
-
-      local asset
-      if getcustomasset then
-        asset = getcustomasset(filePath)
-      elseif getsynasset then
-        asset = getsynasset(filePath)
-      else
-        error("no getcustomasset")
-      end
-
-      MusicSound.SoundId = asset
-      MusicSound.Looped = _G.MusicLoop == true
-      MusicSound.Volume = tonumber(_G.MusicVolume) or 0.6
-      MusicSound:Play()
-      _G.MusicPlaying = true
-    end)
-
-    pcall(function()
-      if ok then
-        Window:Notify({
-          Title = "Music",
-          Content = "Playing: " .. tostring(entry.name),
-          Duration = 3,
-        })
-      else
-        Window:Notify({
-          Title = "Music",
-          Content = "Play failed (executor may block audio)",
-          Duration = 4,
-        })
-      end
-    end)
-  end)
-end
-
--- Mute game only — NEVER kill hub music
-local _MutedOriginal = {}
-local function IsHubMusic(s)
-  if not s then return false end
-  if s == MusicSound then return true end
-  if s.Name == "NyannMusicPlayer" then return true end
-  if s:GetAttribute("NyannHubMusic") == true then return true end
-  return false
-end
-
-local MusicGroup = game:GetService("SoundService"):FindFirstChild("NyannMusicGroup")
-if not MusicGroup then
-  MusicGroup = Instance.new("SoundGroup")
-  MusicGroup.Name = "NyannMusicGroup"
-  MusicGroup.Volume = 1
-  MusicGroup.Parent = game:GetService("SoundService")
-end
-pcall(function()
-  MusicSound.SoundGroup = MusicGroup
-  MusicSound:SetAttribute("NyannHubMusic", true)
-  if MusicSound.Parent ~= game:GetService("SoundService") then
-    MusicSound.Parent = game:GetService("SoundService")
-  end
-end)
-
-local function ProtectMusic()
-  pcall(function()
-    MusicGroup.Volume = 1
-    MusicSound.SoundGroup = MusicGroup
-    MusicSound:SetAttribute("NyannHubMusic", true)
-    local mv = tonumber(_G.MusicVolume) or 0.6
-    MusicSound.Volume = mv
-  end)
-end
-
-local function SilenceSound(s)
-  if not s or not s:IsA("Sound") or IsHubMusic(s) then return end
-  if _MutedOriginal[s] == nil then
-    pcall(function() _MutedOriginal[s] = s.Volume end)
-  end
-  pcall(function()
-    if s.Volume ~= 0 then s.Volume = 0 end
-  end)
-end
-
-local function MuteAllGameSounds()
-  local roots = {
-    workspace,
-    game:GetService("SoundService"),
-    game:GetService("Players"),
-    game:GetService("Lighting"),
-    game:GetService("ReplicatedStorage"),
-  }
-  pcall(function()
-    local pg = game.Players.LocalPlayer and game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-    if pg then table.insert(roots, pg) end
-  end)
-
-  for _, root in ipairs(roots) do
-    pcall(function()
-      for _, s in ipairs(root:GetDescendants()) do
-        SilenceSound(s)
-      end
-    end)
-  end
-  -- DO NOT set SoundService.Volume or MasterVolume (kills hub music)
-  ProtectMusic()
-end
-
-local function RestoreGameSounds()
-  local vol = math.clamp(tonumber(_G.GameVolume) or 1, 0, 1)
-  for s, orig in pairs(_MutedOriginal) do
-    pcall(function()
-      if s and s.Parent and not IsHubMusic(s) then
-        s.Volume = (typeof(orig) == "number") and orig or vol
-      end
-    end)
-  end
-  table.clear(_MutedOriginal)
-  ProtectMusic()
-end
-
-local function EnsureMuteHooks()
-  if _G._NyannMuteHooked then return end
-  _G._NyannMuteHooked = true
-
-  local function onDesc(obj)
-    if not obj:IsA("Sound") then return end
-    if IsHubMusic(obj) then
-      ProtectMusic()
-      return
-    end
-    if _G.MuteGame then
-      SilenceSound(obj)
-      pcall(function()
-        obj:GetPropertyChangedSignal("Volume"):Connect(function()
-          if _G.MuteGame and not IsHubMusic(obj) and obj.Volume ~= 0 then
-            obj.Volume = 0
-          end
-        end)
-      end)
-    end
-  end
-
-  pcall(function() workspace.DescendantAdded:Connect(onDesc) end)
-  pcall(function() game:GetService("SoundService").DescendantAdded:Connect(onDesc) end)
-  pcall(function()
-    local plr = game.Players.LocalPlayer
-    if plr then plr.DescendantAdded:Connect(onDesc) end
-  end)
-end
-
-local function ApplyGameVolume()
-  EnsureMuteHooks()
-  if _G.MuteGame then
-    MuteAllGameSounds()
-  else
-    RestoreGameSounds()
-  end
-  ProtectMusic()
-end
-
--- LEFT: Music controls
-Tabs.Music:AddDropdown({
-  Name = "Select Song",
-  Description = "Playlist from pastefy",
-  Options = SongNames,
-  Default = SongNames[1],
-  Multi = false,
-  Callback = function(v)
-    _G.SelectedSong = v
-  end,
-})
-
-Tabs.Music:AddToggle({
-  Name = "Play Music",
-  Description = "Play / stop selected song",
-  Default = false,
-  Callback = function(v)
-    if v then
-      PlaySong(_G.SelectedSong or SongNames[1])
-    else
-      StopMusic()
-    end
-  end,
-})
-
-Tabs.Music:AddToggle({
-  Name = "Loop Music",
-  Description = "Repeat current track",
-  Default = true,
-  Callback = function(v)
-    _G.MusicLoop = v
-    pcall(function() MusicSound.Looped = v end)
-  end,
-})
-
-Tabs.Music:AddButton({
-  Name = "Play Selected",
-  Description = "Start current song",
-  Callback = function()
-    PlaySong(_G.SelectedSong or SongNames[1])
-  end,
-})
-
-Tabs.Music:AddButton({
-  Name = "Stop Music",
-  Description = "Stop playback",
-  Callback = function()
-    StopMusic()
-  end,
-})
-
-Tabs.Music:AddButton({
-  Name = "Next Random Song",
-  Description = "Play a random track",
-  Callback = function()
-    if #Playlist == 0 then return end
-    local pick = SongNames[math.random(1, #SongNames)]
-    _G.SelectedSong = pick
-    PlaySong(pick)
-  end,
-})
-
--- RIGHT-side style section: volume controls
-Tabs.Music:AddSection("Volume Controls", "Right")
-
-Tabs.Music:AddSlider({
-  Name = "Music Volume",
-  Description = "Hub music volume",
-  Min = 0,
-  Max = 100,
-  Default = math.floor((_G.MusicVolume or 0.6) * 100),
-  Callback = function(v)
-    local n = (tonumber(v) or 60) / 100
-    _G.MusicVolume = n
-    pcall(function() MusicSound.Volume = n end)
-  end,
-})
-
-Tabs.Music:AddSlider({
-  Name = "Game Volume",
-  Description = "Roblox / game sound volume",
-  Min = 0,
-  Max = 100,
-  Default = math.floor((_G.GameVolume or 1) * 100),
-  Callback = function(v)
-    _G.GameVolume = (tonumber(v) or 100) / 100
-    if not _G.MuteGame then
-      ApplyGameVolume()
-    end
-  end,
-})
-
-Tabs.Music:AddToggle({
-  Name = "Mute Game Sounds",
-  Description = "Force silence ALL game audio (hub music stays)",
-  Default = false,
-  Callback = function(v)
-    _G.MuteGame = v
-    ApplyGameVolume()
-  end,
-})
-
-Tabs.Music:AddButton({
-  Name = "Reset Game Volume",
-  Description = "Restore default game volume",
-  Callback = function()
-    _G.MuteGame = false
-    _G.GameVolume = 1
-    ApplyGameVolume()
-    pcall(function()
-      Window:Notify({ Title = "Volume", Content = "Game volume reset to 100%", Duration = 2 })
-    end)
-  end,
-})
-
--- Mute loop: silence game, always protect hub music
-task.spawn(function()
-  while task.wait(0.4) do
-    pcall(function()
-      if _G.MuteGame then
-        MuteAllGameSounds()
-      end
-      ProtectMusic()
-    end)
-  end
-end)
-
-task.spawn(function()
-  local RS = game:GetService("RunService")
-  RS.Heartbeat:Connect(function()
-    if not _G.MuteGame then
-      pcall(ProtectMusic)
-      return
-    end
-    pcall(function()
-      for _, s in ipairs(workspace:GetDescendants()) do
-        if s:IsA("Sound") and not IsHubMusic(s) and s.Volume ~= 0 then
-          s.Volume = 0
-        end
-      end
-      for _, s in ipairs(game:GetService("SoundService"):GetChildren()) do
-        if s:IsA("Sound") and not IsHubMusic(s) and s.Volume ~= 0 then
-          s.Volume = 0
-        end
-      end
-      ProtectMusic()
-    end)
-  end)
-end)
-
 Tabs.Misc:AddSection("Server - Function")
 Tabs.Misc:AddButton({
     Name = "Redeem All Codes",
@@ -12948,12 +12623,46 @@ end
 
 StartMainLoops()
 
-Window:Notify({
-  Title = "Welcome to nyann os by real _@nyannnokonoko",
-  Content = "Load...",
-  Image = "rbxassetid://94678517792779",
-  Duration = 5
-})
+-- Alurt notifications (black & white)
+local Alurt
+pcall(function()
+  Alurt = loadstring(game:HttpGet("https://raw.githubusercontent.com/azir-py/project/refs/heads/main/Zwolf/AlurtUI.lua"))()
+  getgenv().NyannAlurt = Alurt
+end)
+
+task.spawn(function()
+  if not Alurt or not Alurt.CreateNode then
+    pcall(function()
+      Window:Notify({
+        Title = "Welcome to nyann os!",
+        Content = "Thanks you for use",
+        Duration = 5,
+      })
+    end)
+    return
+  end
+
+  -- White on black theme
+  local notif1 = Alurt.CreateNode({
+    Title = "Welcome to nyann os!",
+    Content = "Thanks you for use",
+    Audio = "rbxassetid://17525305988",
+    Length = 8,
+    Image = "rbxassetid://17616650704",
+    BarColor = Color3.fromRGB(255, 255, 255), -- white bar
+  })
+
+  task.wait(2)
+
+  local notif2 = Alurt.CreateNode({
+    Title = "Script beta nên còn lỗi nhé",
+    Content = "",
+    Audio = "rbxassetid://17208361335",
+    Length = 4,
+    Image = "rbxassetid://6031068421",
+    BarColor = Color3.fromRGB(200, 200, 200), -- light gray
+  })
+end)
 -- Script hiển thị tên trên đầu nhân vật
 -- Created by: nyann os by real _@nyannnokonoko
 
@@ -13016,3 +12725,173 @@ player.AncestryChanged:Connect(function(_, parent)
         -- Không cần làm gì thêm
     end
 end)
+
+--==================================================
+-- NYANN OS - STOP TWEEN BUTTON (tắt hết farm)
+--==================================================
+do
+  local Players = game:GetService("Players")
+  local LocalPlayer = Players.LocalPlayer
+  local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+  local UserInputService = game:GetService("UserInputService")
+
+  pcall(function()
+    local old = PlayerGui:FindFirstChild("NYANN_StopTween")
+    if old then old:Destroy() end
+  end)
+
+  local StopGui = Instance.new("ScreenGui")
+  StopGui.Name = "NYANN_StopTween"
+  StopGui.ResetOnSpawn = false
+  StopGui.IgnoreGuiInset = true
+  StopGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+  StopGui.Parent = PlayerGui
+
+  local StopButton = Instance.new("TextButton")
+  StopButton.Name = "StopTween"
+  StopButton.Parent = StopGui
+  StopButton.AnchorPoint = Vector2.new(0.5, 0.5)
+  StopButton.Position = UDim2.new(0.09, 0, 0.26, 0)
+  StopButton.Size = UDim2.new(0, 220, 0, 62)
+  StopButton.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+  StopButton.BackgroundTransparency = 0.05
+  StopButton.BorderSizePixel = 0
+  StopButton.AutoButtonColor = false
+  StopButton.Text = ""
+
+  local Corner = Instance.new("UICorner")
+  Corner.CornerRadius = UDim.new(0, 20)
+  Corner.Parent = StopButton
+
+  local Stroke = Instance.new("UIStroke")
+  Stroke.Thickness = 2.5
+  Stroke.Color = Color3.fromRGB(200, 200, 200)
+  Stroke.Transparency = 0.1
+  Stroke.Parent = StopButton
+
+  local Icon = Instance.new("ImageLabel")
+  Icon.Parent = StopButton
+  Icon.BackgroundTransparency = 1
+  Icon.AnchorPoint = Vector2.new(0.5, 0.5)
+  Icon.Position = UDim2.new(0, 32, 0.5, 0)
+  Icon.Size = UDim2.new(0, 38, 0, 38)
+  Icon.Image = "rbxassetid://94678517792779"
+  Icon.ScaleType = Enum.ScaleType.Fit
+
+  local Text = Instance.new("TextLabel")
+  Text.Parent = StopButton
+  Text.BackgroundTransparency = 1
+  Text.Position = UDim2.new(0, 55, 0, 0)
+  Text.Size = UDim2.new(1, -62, 1, 0)
+  Text.Text = "STOP TWEEN"
+  Text.TextColor3 = Color3.fromRGB(225, 225, 225)
+  Text.TextSize = 20
+  Text.Font = Enum.Font.GothamBold
+  Text.TextXAlignment = Enum.TextXAlignment.Center
+  Text.TextYAlignment = Enum.TextYAlignment.Center
+
+  local function StopAllFarm()
+    -- stop tween
+    shouldTween = false
+    pcall(function()
+      if _G.TweenCache then
+        _G.TweenCache:Cancel()
+        _G.TweenCache = nil
+      end
+    end)
+
+    -- major farm flags
+    local flags = {
+      "Level","AutoFarmNear","AutoFarmChest","AutoChestBP","AutoFarmIsland","AutoFarm_Bone",
+      "Auto_Cake_Prince","AutoDoughKing","AutoAttackDoughKing","FarmEliteHunt","FarmEliteHop",
+      "AutoEctoplasm","AutoBerry","AutoFarmRaid","AutoRaidCastle","AutoKillMob","AutoFarmDungeon",
+      "AutoFarmCandy","MasterAutoLevel","MasterAutoCandy","AutoSaber","CitizenQuest","Bartilo_Quest",
+      "AutoPole","AutoPoleV2","Auto_SuperHuman","AutoDeathStep","Auto_SharkMan_Karate",
+      "Auto_Electric_Claw","AutoDragonTalon","Auto_God_Human","Auto_Tushita","Auto_Soul_Guitar",
+      "AutoKenVTWO","AutoSerpentBow","AutoFMon","AutoMatSoul","obsFarm","AutoBigmom","Doughv2",
+      "AuraBoss","Raiding","Auto_Cavender","TpPly","AutoZou","AutoSaw","AutoTridentW2",
+      "AutoEvoRace","AutoGetQuestBounty","Defeating","DummyMan","Auto_Yama","Auto_SwanGG",
+      "AutoEcBoss","Auto_Mink","Auto_Human","Auto_Skypiea","Auto_Fish","CDK","CDK_TS","CDK_YM",
+      "AutoFarmGodChalice","FarmGodChalice","AutoFistDarkness","AutoMiror","Teleport","AutoKilo",
+      "AutoGetUsoap","Praying","TryLucky","AutoColShad","AutoUnHaki","Auto_DonAcces","AutoRipIngay",
+      "AutoAttackRipIndra","DragoV3","DragoV1","SailBoats","SailBoat_Hydra","WardenBoss","AutoFactory",
+      "HighestMirage","HCM","PGB","Leviathan1","Complete_Trials","AutoFireFlowers","Prehis_Skills",
+      "FarmBlazeEM","Dojoo","CollectPresent","AutoLawKak","TpLab","AutoPhoenixF","AutoHytHallow",
+      "LongsWord","BlackSpikey","AutoHolyTorch","TrainDrago","FarmMastery_Dev","KeysRen",
+      "Auto_Rainbow_Haki","Shark","TerrorShark","Piranha","MobCrew","SeaBeast1","FishBoat",
+      "FindMirage","FarmChestM","TwinHook","TPNpc","Addealer","AcientOne","CraftVM","FrozenTP",
+      "TPDoor","TPGEAR","AutoStartPrehistoric","AutoPlayerHunter","SafeMode","StartEvent",
+      "AutoMysticIsland","AutoChipFruit","AutoChipBeli","AutoHop_Dough","StopWhenChalice",
+      "AutoTP_Gift","AutoTPGift","AutoTPAndCollect","TPFloor1","TPFloor2","TPFloor3","TPFloor4",
+      "ClosetMons","FactoryRaids","CastleRaids"
+    }
+    for _, k in ipairs(flags) do
+      pcall(function() _G[k] = false end)
+    end
+    pcall(function() getgenv().AutoMaterial = false end)
+    pcall(function() getgenv().OnFarm = false end)
+    pcall(function() getgenv().Set = false end)
+
+    -- try update UI toggles if library supports Set
+    local toggleObjs = {
+      FarmLevel, ClosetMons, FactoryRaids, CastleRaids, Ecto, ChestTW, ChestBP, Berry, BerryH,
+      EliteQ, EliteH, Cake, CakeQ, CakeSM
+    }
+    for _, t in ipairs(toggleObjs) do
+      pcall(function()
+        if t then
+          if t.Set then t:Set(false)
+          elseif t.SetValue then t:SetValue(false)
+          elseif type(t) == "table" and t.Value ~= nil then t.Value = false
+          end
+        end
+      end)
+    end
+
+    print("[NYANN OS] STOP TWEEN -> all farm OFF")
+  end
+
+  StopButton.MouseButton1Click:Connect(function()
+    StopAllFarm()
+    Text.Text = "STOPPED"
+    task.wait(0.7)
+    Text.Text = "STOP TWEEN"
+  end)
+
+  StopButton.TouchTap:Connect(function()
+    StopAllFarm()
+    Text.Text = "STOPPED"
+    task.wait(0.7)
+    Text.Text = "STOP TWEEN"
+  end)
+
+  -- drag
+  local Dragging, DragStart, StartPosition
+  StopButton.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+      or Input.UserInputType == Enum.UserInputType.Touch then
+      Dragging = true
+      DragStart = Input.Position
+      StartPosition = StopButton.Position
+    end
+  end)
+  StopButton.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+      or Input.UserInputType == Enum.UserInputType.Touch then
+      Dragging = false
+    end
+  end)
+  UserInputService.InputChanged:Connect(function(Input)
+    if not Dragging then return end
+    if Input.UserInputType ~= Enum.UserInputType.MouseMovement
+      and Input.UserInputType ~= Enum.UserInputType.Touch then return end
+    local Delta = Input.Position - DragStart
+    StopButton.Position = UDim2.new(
+      StartPosition.X.Scale, StartPosition.X.Offset + Delta.X,
+      StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y
+    )
+  end)
+
+  getgenv().NyannStopAllFarm = StopAllFarm
+  print("[NYANN OS] STOP TWEEN UI LOADED")
+end
