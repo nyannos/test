@@ -1315,8 +1315,8 @@ end
 
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
 local Window = redzlib:MakeWindow({
-    Title = "Sóc lọ hub",
-    SubTitle = "by real_@nyann and bao",
+    Title = "nyann os Version 4",
+    SubTitle = "by real_@nyannnokonoko",
     SaveFolder = "nyannnaiget.json"
 })
 
@@ -1325,7 +1325,7 @@ local Minimizer = Window:NewMinimizer({
 })
 
 local MobileButton = Minimizer:CreateMobileMinimizer({
-  Image = "rbxassetid://112173305232811",
+  Image = "rbxassetid://94678517792779",
   BackgroundColor3 = Color3.fromRGB(0, 255, 254)
 })
 
@@ -12045,9 +12045,9 @@ end
 StartMainLoops()
 
 Window:Notify({
-  Title = "Sóc lọ hub",
-  Content = "Load...",
-  Image = "rbxassetid://112173305232811",
+  Title = "Welcome to nyann os",
+  Content = "Version 4",
+  Image = "rbxassetid://94678517792779",
   Duration = 5
 })
 -- Script hiển thị tên trên đầu nhân vật
@@ -12059,7 +12059,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- TÙY CHỈNH
-local TEXT = "Sóc lọ hub"          
+local TEXT = "@nyannnokonoko"          
 local TEXT_SIZE = 14             
 local GUI_OFFSET = Vector3.new(0, 1.8, 0) 
 
