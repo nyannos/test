@@ -1351,19 +1351,19 @@ end
 
 MakeWindow({
   Hub = {
-    Title = "nyann os Version 6",
-    Animation = "by real_@nyannnokonoko",
+    Title = "nyann os [Premium] by real_@nyannnokonoko",
+    Animation = "Load...",
   },
   Key = {
     KeySystem = false,
-    Title = "Key",
+    Title = "",
     Description = "",
     Keys = { "nyann" },
     KeyLink = "",
     Notifi = {
       Notifications = true,
-      Incorrectkey = "Key sai",
-      CorrectKey = "OK",
+      Incorrectkey = "√",
+      CorrectKey = "X",
       CopyKeyLink = "Copied",
     },
   },
@@ -1373,7 +1373,7 @@ pcall(function()
   if type(MinimizeButton) == "function" then
     MinimizeButton({
       Image = "rbxassetid://94678517792779",
-      Size = { 68, 68 },
+      Size = { 42, 42 },
       Color = Color3.fromRGB(12, 12, 12),
       Corner = true,
       Stroke = false,
@@ -1599,7 +1599,8 @@ local Tabs = {
     Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
     Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
     Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
-    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://" }),
+    Shop = Window:MakeTab({ Title = "Shop", Icon = "rbxassetid://" }),
+    Music = Window:MakeTab({ Title = "Music", Icon = "" }),
     Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
 }
 
@@ -12363,6 +12364,241 @@ local function StartMainLoops()
 end
 
 StartMainLoops()
+
+
+-- ========================================
+-- MUSIC TAB (playlist + play/stop + ID + mute game)
+-- Playlist: https://pastefy.app/0QU2aU7c/raw
+-- ========================================
+do
+  local SoundService = game:GetService("SoundService")
+  local HttpService = game:GetService("HttpService")
+
+  local NyannMusic = {
+    Sound = nil,
+    Playing = false,
+    Playlist = {},
+    Names = {},
+    MuteGame = false,
+    SavedVolumes = {},
+  }
+
+  -- load playlist
+  pcall(function()
+    local raw = game:HttpGet("https://pastefy.app/0QU2aU7c/raw")
+    local data = HttpService:JSONDecode(raw)
+    if type(data) == "table" then
+      for _, item in ipairs(data) do
+        local name = tostring(item.name or "Track")
+        local artist = tostring(item.artist or "")
+        local url = item.download_url
+        if url and url ~= "" then
+          local label = name
+          if artist ~= "" then label = name .. " — " .. artist end
+          table.insert(NyannMusic.Playlist, { name = label, url = url })
+          table.insert(NyannMusic.Names, label)
+        end
+      end
+    end
+  end)
+
+  if #NyannMusic.Names == 0 then
+    table.insert(NyannMusic.Names, "(playlist empty / failed to load)")
+  end
+
+  local function stopMusic()
+    pcall(function()
+      if NyannMusic.Sound then
+        NyannMusic.Sound:Stop()
+        NyannMusic.Sound:Destroy()
+        NyannMusic.Sound = nil
+      end
+    end)
+    NyannMusic.Playing = false
+  end
+
+  local function playUrl(url)
+    stopMusic()
+    if not url or url == "" then return end
+    local ok, err = pcall(function()
+      local s = Instance.new("Sound")
+      s.Name = "NyannOS_Music"
+      s.SoundId = url -- may need rbxassetid for roblox assets; external URL works on some executors
+      -- many executors support Sound with direct http via GetAsset or just SoundId as url
+      if not string.find(tostring(url), "rbxassetid") and not string.find(tostring(url), "http") then
+        s.SoundId = "rbxassetid://" .. tostring(url)
+      elseif tonumber(url) then
+        s.SoundId = "rbxassetid://" .. tostring(url)
+      else
+        s.SoundId = tostring(url)
+      end
+      s.Looped = true
+      s.Volume = 1
+      s.Parent = SoundService
+      s:Play()
+      NyannMusic.Sound = s
+      NyannMusic.Playing = true
+    end)
+    if not ok then
+      warn("[nyann os] play music fail:", err)
+    end
+  end
+
+  local function playByName(label)
+    for _, t in ipairs(NyannMusic.Playlist) do
+      if t.name == label then
+        playUrl(t.url)
+        return
+      end
+    end
+  end
+
+  local function setMuteGame(on)
+    NyannMusic.MuteGame = on
+    pcall(function()
+      if on then
+        -- mute everything except our music
+        for _, s in ipairs(SoundService:GetDescendants()) do
+          if s:IsA("Sound") and s.Name ~= "NyannOS_Music" then
+            if NyannMusic.SavedVolumes[s] == nil then
+              NyannMusic.SavedVolumes[s] = s.Volume
+            end
+            s.Volume = 0
+          end
+        end
+        -- also workspace sounds
+        for _, s in ipairs(workspace:GetDescendants()) do
+          if s:IsA("Sound") and s.Name ~= "NyannOS_Music" then
+            if NyannMusic.SavedVolumes[s] == nil then
+              NyannMusic.SavedVolumes[s] = s.Volume
+            end
+            s.Volume = 0
+          end
+        end
+      else
+        for s, vol in pairs(NyannMusic.SavedVolumes) do
+          pcall(function()
+            if s and s.Parent then s.Volume = vol end
+          end)
+        end
+        NyannMusic.SavedVolumes = {}
+      end
+    end)
+  end
+
+  -- keep muting new game sounds while enabled
+  task.spawn(function()
+    while task.wait(0.5) do
+      if NyannMusic.MuteGame then
+        pcall(function()
+          for _, parent in ipairs({ SoundService, workspace }) do
+            for _, s in ipairs(parent:GetDescendants()) do
+              if s:IsA("Sound") and s.Name ~= "NyannOS_Music" and s.Volume ~= 0 then
+                if NyannMusic.SavedVolumes[s] == nil then
+                  NyannMusic.SavedVolumes[s] = s.Volume
+                end
+                s.Volume = 0
+              end
+            end
+          end
+        end)
+      end
+    end
+  end)
+
+  if Tabs and Tabs.Music then
+    Tabs.Music:AddSection("Playlist")
+
+    local selectedTrack = NyannMusic.Names[1]
+
+    Tabs.Music:AddDropdown({
+      Name = "Select Song",
+      Options = NyannMusic.Names,
+      Default = selectedTrack,
+      Callback = function(Value)
+        selectedTrack = Value
+      end,
+    })
+
+    Tabs.Music:AddButton({
+      Name = "Play Selected",
+      Callback = function()
+        playByName(selectedTrack)
+        pcall(function()
+          Window:Notify({ Title = "Music", Content = "Playing: " .. tostring(selectedTrack), Duration = 3 })
+        end)
+      end,
+    })
+
+    Tabs.Music:AddButton({
+      Name = "Stop Music",
+      Callback = function()
+        stopMusic()
+        pcall(function()
+          Window:Notify({ Title = "Music", Content = "Stopped", Duration = 2 })
+        end)
+      end,
+    })
+
+    Tabs.Music:AddSection("Custom ID")
+
+    local customId = ""
+    Tabs.Music:AddTextBox({
+      Name = "Sound ID / URL",
+      Placeholder = "rbxassetid or number or url",
+      Default = "",
+      Callback = function(Value)
+        customId = tostring(Value or "")
+      end,
+    })
+
+    Tabs.Music:AddButton({
+      Name = "Play Custom ID",
+      Callback = function()
+        if customId == "" then
+          pcall(function()
+            Window:Notify({ Title = "Music", Content = "Empty ID", Duration = 2 })
+          end)
+          return
+        end
+        playUrl(customId)
+        pcall(function()
+          Window:Notify({ Title = "Music", Content = "Playing custom", Duration = 2 })
+        end)
+      end,
+    })
+
+    Tabs.Music:AddSection("Audio")
+
+    Tabs.Music:AddToggle({
+      Name = "Mute Game Sound",
+      Default = false,
+      Callback = function(Value)
+        setMuteGame(Value == true)
+        pcall(function()
+          Window:Notify({
+            Title = "Music",
+            Content = Value and "Game muted · only music" or "Game sound restored",
+            Duration = 3,
+          })
+        end)
+      end,
+    })
+
+    Tabs.Music:AddButton({
+      Name = "Reload Playlist",
+      Callback = function()
+        pcall(function()
+          Window:Notify({ Title = "Music", Content = "Rejoin script to reload playlist", Duration = 3 })
+        end)
+      end,
+    })
+  end
+
+  getgenv().NyannMusic = NyannMusic
+  print("[nyann os] Music tab ready · tracks:", #NyannMusic.Playlist)
+end
+
 
 -- Alurt notifications (black & white)
 local Alurt
