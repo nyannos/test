@@ -634,7 +634,7 @@ sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
     ["Tween Speed"] = 1.5, -- bay (duration = distance/(100*speed))
-    ["Bypass Teleport"] = false, -- tắt bypass reset (gây lỗi farm Cake/Bone/Level)
+    ["Bypass Teleport"] = true,
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
     ["Same Y"] = false
@@ -809,9 +809,26 @@ function GetBypassCFrame(x)
 end
 
 function BypassTP(Target)
-    -- Không dùng reset/kill (ChangeState 15) — dễ lỗi khi farm Cake / Bone / Level
-    -- Chỉ tween bình thường qua _tp
-    return
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    
+    local Humanoid = WaitForHumanoid()
+    if not Humanoid or Humanoid.Health <= 0 then return end
+    
+    if CanBypassTeleport(Target) and GetBypassCFrame(Target) then
+        local TargetTP = GetBypassCFrame(Target)
+        if TargetTP and TargetTP:FindFirstChild("Part") then
+            Character.LastSpawnPoint.Disabled = true
+            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetLastSpawnPoint", TargetTP.Name)
+            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetSpawnPoint")
+            Character:PivotTo(TargetTP.Part.CFrame)
+            Humanoid:ChangeState(15)
+            
+            repeat 
+                task.wait() 
+            until LocalPlayer.Character and WaitForHumanoid() and WaitForHumanoid().Health > 0
+        end
+    end
 end
 
 function totopofgreattree()
@@ -915,10 +932,8 @@ _tp = function(target)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local rootPart = character.HumanoidRootPart
     
-    -- Không bypass-reset khi đang farm Cake / Bone / Level
-    local skipBypass = _G.Auto_Cake_Prince or _G.AutoFarm_Bone or _G.Level or _G.AutoFarmNear
     pcall(function()
-        if not skipBypass and Settings["Bypass Teleport"] and CanBypassTeleport(gg) then
+        if CanBypassTeleport(gg) then
             BypassTP(gg)
             task.wait(0.5)
         end
@@ -1336,8 +1351,7 @@ QuestNeta = function()
 end
 
 -- ========================================
--- W-Azeox Ui (Zeox) + shim Tabs.* + minimize v6
--- https://raw.githubusercontent.com/ru-3/W-Azeox-Ui/refs/heads/main/src/ui/Ui.lua
+-- XEZIOS LIBRARY + shim (giữ full Tabs.* API)
 -- ========================================
 print("[nyann os] loading Zeox Ui...")
 
@@ -1354,8 +1368,8 @@ do
 end
 
 local RealWindow = Ui:CreateWindow({
-  Title = "nyann os by real_@nyannnokonoko",
-  Version = "Version 1",
+  Title = "nyann os",
+  Version = "v6",
   Theme = "Dark",
   Size = UDim2.new(0, 720, 0, 480),
 })
@@ -1747,7 +1761,7 @@ local Tabs = {
     Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
     Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
     Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
-    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://" }),
+    Shop = Window:MakeTab({ Title = "Shop", Icon = "rbxassetid://" }),
     Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
 }
 
@@ -2493,7 +2507,7 @@ ChestBP = Tabs.Main:AddToggle({
 StopI = Tabs.Main:AddToggle({
 Name = "Stop Items", 
 Description = "", 
-Default = true,
+Default = true, -- auto ON
 Callback = function(Value)
     _G.StopWhenChalice = Value
 end})
@@ -3312,19 +3326,6 @@ Cake = Tabs.Main:AddToggle({
     Default = false,
     Callback = function(Value)
     _G.Auto_Cake_Prince = Value
-    if Value then
-      -- bay tới đảo Cake (tween, không reset)
-      task.spawn(function()
-        pcall(function()
-          local cakeCF = CFrame.new(-2077, 252, -12373)
-          local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-          if hrp and (hrp.Position - cakeCF.Position).Magnitude > 200 then
-            shouldTween = true
-            _tp(cakeCF)
-          end
-        end)
-      end)
-    end
 end
 })
 
@@ -3594,19 +3595,6 @@ Tabs.Main:AddToggle({
     Default = false,
     Callback = function(Value)
         _G.AutoFarm_Bone = Value
-        if Value then
-          -- bay tới khu Bone (Haunted Castle)
-          task.spawn(function()
-            pcall(function()
-              local boneCF = CFrame.new(-8764, 142, 5963) -- Reborn Skeleton
-              local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-              if hrp and (hrp.Position - boneCF.Position).Magnitude > 200 then
-                shouldTween = true
-                _tp(boneCF)
-              end
-            end)
-          end)
-        end
     end
 })
 
@@ -4437,6 +4425,31 @@ spawn(function()
     end)
   end
 end)
+
+-- Auto ON khi chạy script: Fast Attack + Bring + Buso + Spin XYZ + Stop Items + Anti AFK
+task.defer(function()
+  task.wait(0.35)
+  _G.Seriality = true
+  _B = true
+  Boud = true
+  RandomCFrame = true
+  _G.StopWhenChalice = true
+  -- Anti AFK
+  pcall(function()
+    local vu = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+      vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+      task.wait(1)
+      vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    end)
+  end)
+  pcall(function() if Initialize and Initialize.Set then Initialize:Set(true) end end)
+  pcall(function() if Bringmob and Bringmob.Set then Bringmob:Set(true) end end)
+  pcall(function() if BusuAura and BusuAura.Set then BusuAura:Set(true) end end)
+  pcall(function() if RandomAround and RandomAround.Set then RandomAround:Set(true) end end)
+  pcall(function() if StopI and StopI.Set then StopI:Set(true) end end)
+  print("[nyann os] Auto ON: Fast Attack / Bring / Buso / Spin XYZ / Stop Items / Anti AFK")
+end)
 Tabs.Settings:AddToggle({
     Name = "Auto Haki Observation",
     Default = false,
@@ -4495,7 +4508,7 @@ end)
 RandomAround = Tabs.Settings:AddToggle({
 Name = "Auto Turn on Spin  xyz", 
 Description = "", 
-Default = false,
+Default = true,
 Callback = function(Value)
   RandomCFrame = Value
 end})
@@ -4581,7 +4594,7 @@ end)
 
 Tabs.Settings:AddToggle({
     Name = "Anti AFK",
-    Default = true,
+    Default = true, -- auto ON
     Callback = function(Value)
         if Value then
             local vu = game:GetService("VirtualUser")
