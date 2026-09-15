@@ -1031,8 +1031,8 @@ spawn(function()
     local Test = Instance.new("Highlight")
     Test.Name = "highlight"
     Test.Enabled = true
-    Test.FillColor = Color3.fromRGB(0,255,254)
-    Test.OutlineColor = Color3.fromRGB(0,255,254)
+    Test.FillColor = Color3.fromRGB(255, 255, 255)
+    Test.OutlineColor = Color3.fromRGB(255, 255, 255)
     Test.FillTransparency = 0.5
     Test.OutlineTransparency = 0.2
     Test.Parent = plr.Character
@@ -1358,20 +1358,34 @@ print("[nyann os] loading Zeox Ui...")
 local Ui
 do
   local ok, res = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua"))()
+    local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua")
+    -- Font Code
+    src = src:gsub("Enum%.Font%.GothamBold", "Enum.Font.Code")
+    src = src:gsub("Enum%.Font%.GothamMedium", "Enum.Font.Code")
+    src = src:gsub("Enum%.Font%.Gotham", "Enum.Font.Code")
+    -- dropdown: respect Default = "" / explicit empty (don't force options[1])
+    src = src:gsub(
+      "local selected = opt%.Default or options%[1%] or ''",
+      "local selected = (opt.Default ~= nil) and opt.Default or (options[1] or '')"
+    )
+    local fn, err = loadstring(src)
+    if not fn then error(err or "compile zeox") end
+    return fn()
   end)
   if not ok or not res then
     error("[nyann os] Zeox Ui fail: " .. tostring(res))
   end
   Ui = res
+  getgenv().NyannZeoxUi = Ui
   print("[nyann os] Zeox Ui OK")
 end
 
 local RealWindow = Ui:CreateWindow({
-  Title = "nyann os by real_@nyannnokonoko",
-  Version = "Version",
+  Title = "nyann os [BETA] by real_@nyannnokonoko",
+  Version = "Version 1🟢",
   Theme = "Dark",
   Size = UDim2.new(0, 720, 0, 480),
+  FloatingToggle = false, -- tắt cục tròn đen mặc định của Zeox (chỉ dùng minimize v6)
 })
 
 -- ========================================
@@ -1496,7 +1510,27 @@ do
     end
   end)
 
-  print("[nyann os] Minimize icon ready (v6 style)")
+  
+-- xóa floating tròn đen của Zeox nếu còn sót
+pcall(function()
+  local CoreGui = game:GetService("CoreGui")
+  for _, g in ipairs(CoreGui:GetChildren()) do
+    if g.Name == "ZeoxFloating" then g:Destroy() end
+  end
+  local pg = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+  if pg then
+    for _, g in ipairs(pg:GetChildren()) do
+      if g.Name == "ZeoxFloating" then g:Destroy() end
+    end
+  end
+  if gethui then
+    for _, g in ipairs(gethui():GetChildren()) do
+      if g.Name == "ZeoxFloating" then g:Destroy() end
+    end
+  end
+end)
+
+print("[nyann os] Minimize icon ready (v6 style)")
 end
 
 -- Shim Tabs.* → Zeox CreateTab / CreateSection / CreateToggle...
@@ -1748,7 +1782,7 @@ local redzlib = {
 print("[nyann os] Zeox menu ready")
 
 local Tabs = {
-    Info = Window:MakeTab({ Title = "Info And Status", Icon = "" }),
+    Info = Window:MakeTab({ Title = "Info", Icon = "" }),
     Main = Window:MakeTab({ Title = "Main", Icon = "rbxassetid://" }),
     Font = Window:MakeTab({ Title = "Font", Icon = "rbxassetid://" }),
     Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://" }),
@@ -1812,8 +1846,6 @@ Tabs.Info:AddDiscordInvite({
 	Members = 36, 
 	Online = 67, 
 })
-Tabs.Info:AddSection("Status Server")
-
 -- ==========================================
 -- PHẦN CHỌN FONT (thêm vào tab Font)
 -- ==========================================
@@ -1865,220 +1897,31 @@ for _, fontData in ipairs(fontList) do
     })
 end
 
-local TimeZone = Tabs.Info:AddParagraph("Time Zone", "")
-
-function UpdateOS()
-    local date = os.date("*t")
-    local hour = (date.hour) % 24
-    local ampm = hour < 12 and "AM" or "PM"
-    local timezone = string.format("%02i:%02i:%02i %s", ((hour - 1) % 12) + 1, date.min, date.sec, ampm)
-    local datetime = string.format("%02d/%02d/%04d", date.day, date.month, date.year)    
-    
-    local LocalizationService = game:GetService("LocalizationService")
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local result, code    
-    
-    if not getgenv().countryRegionCode then
-        result, code = pcall(function()
-            return LocalizationService:GetCountryRegionForPlayerAsync(player)
-        end)
-        if result then
-            getgenv().countryRegionCode = code
-        else
-            getgenv().countryRegionCode = "Unknown"
-        end
-    else
-        code = getgenv().countryRegionCode
-    end
-    
-    TimeZone:SetDesc(datetime.." - "..timezone.." [ " .. code .. " ]")
-end
-
-spawn(function()
-    while true do
-        UpdateOS()
-        wait(1)
-    end
-end)
-
-local GameTime = Tabs.Info:AddParagraph("Game Time", "")
-
-function UpdateGameTime()
-    local GameTimeValue = math.floor(workspace.DistributedGameTime + 0.5)
-    local Hour = math.floor(GameTimeValue / (60^2)) % 24
-    local Minute = math.floor(GameTimeValue / (60^1)) % 60
-    local Second = math.floor(GameTimeValue / (60^0)) % 60
-    GameTime:SetDesc(Hour.." Hour (h) "..Minute.." Minute (m) "..Second.." Second (s)")
-end
-
-spawn(function()
-    while true do
-        UpdateGameTime()
-        wait(1)
-    end
-end)
-
-local MirageCheck = Tabs.Info:AddParagraph("Mirage Island", "Status: ")
-
-local previousMirageStatus = ""
-spawn(function()
-    pcall(function()
-        while true do
-            wait(1)            
-            local mirageIslandExists = game.Workspace._WorldOrigin.Locations:FindFirstChild('Mirage Island') ~= nil
-            local currentStatus = mirageIslandExists and '✅' or '❌'
-            if currentStatus ~= previousMirageStatus then
-                MirageCheck:SetDesc('Status: ' .. currentStatus)
-                previousMirageStatus = currentStatus
-            end
-        end
-    end)
-end)
-
-local KitsuneCheck = Tabs.Info:AddParagraph("Kitsune Island", "Status: ")
-
-local previousKitsuneStatus = ""
-spawn(function()
-    while task.wait(1) do
-        local currentStatus = game:GetService("Workspace").Map:FindFirstChild("KitsuneIsland") and '✅' or '❌'
-        if currentStatus ~= previousKitsuneStatus then
-            KitsuneCheck:SetDesc('Status: ' .. currentStatus)
-            previousKitsuneStatus = currentStatus
-        end
-    end
-end)
-
-local PrehistoricCheck = Tabs.Info:AddParagraph("Prehistoric Island", "Status: ")
-
-local previousPrehistoricStatus = ""
-task.spawn(function()
-    while task.wait(1) do
-        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island") and '✅' or '❌'
-        if currentStatus ~= previousPrehistoricStatus then
-            PrehistoricCheck:SetDesc("Status: " .. currentStatus)
-            previousPrehistoricStatus = currentStatus
-        end
-    end
-end)
-
-local FrozenCheck = Tabs.Info:AddParagraph("Frozen Dimension", "Status: ")
-
-local previousFrozenStatus = ""
-spawn(function()
-    while wait(1) do
-        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild('Frozen Dimension') and '✅' or '❌'
-        if currentStatus ~= previousFrozenStatus then
-            FrozenCheck:SetDesc('Status: ' .. currentStatus)
-            previousFrozenStatus = currentStatus
-        end
-    end
-end)
-
-local CakePrinceStatus = Tabs.Info:AddParagraph("Cake Prince", "")
-
-spawn(function()
-    while wait(1) do
-        local cakePrince = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-        local killStatus = "Cake Prince: ✅"
-        if string.len(cakePrince) >= 86 then
-            local killCount = string.sub(cakePrince, 39, 41)
-            killStatus = "Killed: " .. killCount
-        end
-        CakePrinceStatus:SetDesc(killStatus)
-    end
-end)
-
-local RipIndraCheck = Tabs.Info:AddParagraph("Rip Indra", "Status: ")
-
-local previousRipStatus = ""
-spawn(function()
-    while wait(1) do
-        local currentStatus = (game:GetService("ReplicatedStorage"):FindFirstChild("rip_indra True Form") or 
-                               game:GetService("Workspace").Enemies:FindFirstChild("rip_indra")) and '✅' or '❌'
-        if currentStatus ~= previousRipStatus then
-            RipIndraCheck:SetDesc("Status: " .. currentStatus)
-            previousRipStatus = currentStatus
-        end
-    end
-end)
-
-local DoughKingCheck = Tabs.Info:AddParagraph("Dough King", "Status: ")
-
-local previousDoughStatus = ""
-spawn(function()
-    while wait(1) do
-        local currentStatus = (game:GetService("ReplicatedStorage"):FindFirstChild("Dough King") or 
-                               game:GetService("Workspace").Enemies:FindFirstChild("Dough King")) and '✅' or '❌'
-        if currentStatus ~= previousDoughStatus then
-            DoughKingCheck:SetDesc("Status: " .. currentStatus)
-            previousDoughStatus = currentStatus
-        end
-    end
-end)
-
-local FullMoonCheck = Tabs.Info:AddParagraph("Full Moon", "")
-
-task.spawn(function()
-    while task.wait(1) do
-        local moonTextureId = game:GetService("Lighting").Sky.MoonTextureId
-        local moonStatus = "Moon: 0/5"
-        
-        if moonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
-            moonStatus = "Moon: 5/5 (Full Moon) ✅"
-        elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149052" then
-            moonStatus = "Moon: 4/5"
-        elseif moonTextureId == "http://www.roblox.com/asset/?id=9709143733" then
-            moonStatus = "Moon: 3/5"
-        elseif moonTextureId == "http://www.roblox.com/asset/?id=9709150401" then
-            moonStatus = "Moon: 2/5"
-        elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149680" then
-            moonStatus = "Moon: 1/5"
-        end
-        
-        FullMoonCheck:SetDesc(moonStatus)
-    end
-end)
-
-local LegendarySwordCheck = Tabs.Info:AddParagraph("Legendary Sword", "Status: ")
-
-spawn(function()
-    while wait(1) do
-        local swordStatus = "Not Found"
-        
-        if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "1") then
-            swordStatus = "Shisui ✅"
-        elseif game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "2") then
-            swordStatus = "Wando ✅"
-        elseif game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "3") then
-            swordStatus = "Saddi ✅"
-        end
-        
-        LegendarySwordCheck:SetDesc(swordStatus)
-    end
-end)
-
-local BoneCount = Tabs.Info:AddParagraph("Bone", "")
-
-spawn(function()
-    while wait(1) do
-        local bones = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Bones", "Check")
-        BoneCount:SetDesc("You Have: " .. tostring(bones) .. " Bones")
-    end
-end)
 local RFSubmarineWorkerSpeak = replicated.Modules.Net["RF/SubmarineWorkerSpeak"]
+_G.ChooseWP = nil
+_G.SelectWeapon = nil
 WeaponDropdown = Tabs.Main:AddDropdown({
     Name = "Select Weapon",
-    Options = {"Melee","Sword","Blox Fruit","Gun"},
-    Default = "Melee",
+    Options = {"Melee", "Sword", "Blox Fruit", "Gun"},
+    Default = "None",
     Callback = function(Value)
-    _G.ChooseWP = Value
-end})
-
+        -- None / empty = chưa chọn vũ khí
+        if Value == nil or Value == "" or Value == "None" then
+            _G.ChooseWP = nil
+            _G.SelectWeapon = nil
+            return
+        end
+        _G.ChooseWP = Value
+    end
+})
 
 spawn(function()
     while task.wait(0.5) do
         pcall(function()
+            if not _G.ChooseWP or _G.ChooseWP == "None" then
+                _G.SelectWeapon = nil
+                return
+            end
             if _G.ChooseWP == "Melee" then
                 for _,v in pairs(plr.Backpack:GetChildren()) do
                     if v.ToolTip == "Melee" then
@@ -2107,16 +1950,6 @@ spawn(function()
         end)
     end
 end)
-Tabs.Main:AddDropdown({
-    Name = "UI Scale",
-    Options = {"Small", "Normal", "Big"},
-    Default = "Normal",
-    Callback = function(Value)
-        local scales = {Small = 0.8, Normal = 1.0, Big = 1.2}
-        Window:SetUIScale(scales[Value])
-    end
-})
-
 Tabs.Main:AddSection("Farming")
 
 FarmLevel = Tabs.Main:AddToggle({
@@ -4334,6 +4167,51 @@ end)
 
 
 
+
+
+Tabs.Settings:AddSection("Menu Theme")
+Tabs.Settings:AddDropdown({
+  Name = "Select Theme",
+  Options = {
+    "Dark",
+    "Light",
+    "DarkRed",
+    "Crimson",
+    "Ruby",
+    "Obsidian",
+    "Inferno",
+    "Blood Moon",
+    "Shadow Red",
+  },
+  Default = "Dark",
+  Callback = function(Value)
+    local map = {
+      ["Dark"] = "Dark",
+      ["Light"] = "Light",
+      ["DarkRed"] = "DarkRed",
+      ["Crimson"] = "Crimson",
+      ["Ruby"] = "Ruby",
+      ["Obsidian"] = "Obsidian",
+      ["Inferno"] = "Inferno",
+      ["Blood Moon"] = "Blood Moon",
+      ["Shadow Red"] = "Shadow Red",
+    }
+    local key = map[Value] or Value
+    pcall(function()
+      local lib = getgenv().NyannZeoxUi or Ui
+      if lib and lib.SetTheme then
+        lib:SetTheme(key)
+      end
+    end)
+    pcall(function()
+      Window:Notify({
+        Title = "Theme",
+        Content = "Applied: " .. tostring(Value),
+        Duration = 2,
+      })
+    end)
+  end,
+})
 
 Tabs.Settings:AddSection("Settings / Configure")
 
@@ -11724,6 +11602,7 @@ Tabs.Shop:AddButton({
         game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/InteractDragonQuest"):InvokeServer(unpack(args))
     end
 })
+
 
 Tabs.Misc:AddSection("Server - Function")
 Tabs.Misc:AddButton({
