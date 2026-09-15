@@ -5,15 +5,15 @@ do
   -- chờ character (timeout) — tránh crash không hiện menu
   do
     local t0 = tick()
-    while (not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart")) and tick() - t0 < 20 do
-      task.wait(0.1)
+    while (not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart")) and tick() - t0 < 4 do
+      task.wait(0.05)
     end
   end
   Root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
   replicated = game:GetService("ReplicatedStorage")
   pcall(function()
-    plr:WaitForChild("Data", 10)
-    if plr:FindFirstChild("Data") then plr.Data:WaitForChild("Level", 5) end
+    plr:WaitForChild("Data", 3)
+    if plr:FindFirstChild("Data") then plr.Data:WaitForChild("Level", 2) end
   end)
   Lv = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or 1
   TeleportService = game:GetService("TeleportService")
@@ -47,7 +47,7 @@ do
   Num_self = 25
   pcall(function()
     plr.CharacterAdded:Connect(function(char)
-      local hrp = char:WaitForChild("HumanoidRootPart", 10)
+      local hrp = char:WaitForChild("HumanoidRootPart", 5)
       if hrp then Root = hrp end
     end)
   end)
@@ -59,8 +59,8 @@ do
   repeat
     local loading = plr.PlayerGui and plr.PlayerGui:FindFirstChild("Main")
     loading = loading and loading:FindFirstChild("Loading")
-    task.wait(0.1)
-  until (game:IsLoaded() and not (loading and loading.Visible)) or (tick() - t0 > 20)
+    task.wait(0.05)
+  until (game:IsLoaded() and not (loading and loading.Visible)) or (tick() - t0 > 5)
 end
 print("[nyann os] game ready")
 World1 = game.PlaceId == 2753915549 or game.PlaceId == 85211729168715
@@ -89,8 +89,8 @@ local mastery2 = {"Reborn Skeleton"}
 local PosMsList = {["Pirate Millionaire"] = CFrame.new(-712.8272705078125, 98.5770492553711, 5711.9541015625),["Pistol Billionaire"] = CFrame.new(-723.4331665039062, 147.42906188964844, 5931.9931640625),["Dragon Crew Warrior"] = CFrame.new(7021.50439453125, 55.76270294189453, -730.1290893554688),["Dragon Crew Archer"] = CFrame.new(6625, 378, 244),["Female Islander"] = CFrame.new(4692.7939453125, 797.9766845703125, 858.8480224609375),["Venomous Assailant"] = CFrame.new(4902, 670, 39), ["Marine Commodore"] = CFrame.new(2401, 123, -7589),["Marine Rear Admiral"] = CFrame.new(3588, 229, -7085),["Fishman Raider"] = CFrame.new(-10941, 332, -8760),["Fishman Captain"] = CFrame.new(-11035, 332, -9087),["Forest Pirate"] = CFrame.new(-13446, 413, -7760),["Mythological Pirate"] = CFrame.new(-13510, 584, -6987),["Jungle Pirate"] = CFrame.new(-11778, 426, -10592),["Musketeer Pirate"] = CFrame.new(-13282, 496, -9565),["Reborn Skeleton"] = CFrame.new(-8764, 142, 5963),["Living Zombie"] = CFrame.new(-10227, 421, 6161),["Demonic Soul"] = CFrame.new(-9579, 6, 6194),["Posessed Mummy"] = CFrame.new(-9579, 6, 6194),["Peanut Scout"] = CFrame.new(-1993, 187, -10103),["Peanut President"] = CFrame.new(-2215, 159, -10474),["Ice Cream Chef"] = CFrame.new(-877, 118, -11032),["Ice Cream Commander"] = CFrame.new(-877, 118, -11032),["Cookie Crafter"] = CFrame.new(-2021, 38, -12028),["Cake Guard"] = CFrame.new(-2024, 38, -12026),["Baking Staff"] = CFrame.new(-1932, 38, -12848),["Head Baker"] = CFrame.new(-1932, 38, -12848),["Cocoa Warrior"] = CFrame.new(95, 73, -12309),["Chocolate Bar Battler"] = CFrame.new(647, 42, -12401),["Sweet Thief"] = CFrame.new(116, 36, -12478),["Candy Rebel"] = CFrame.new(47, 61, -12889),["Ghost"] = CFrame.new(5251, 5, 1111)}
 local Remotes = { RFJobsRemoteFunction = nil, RFCraft = nil }
 pcall(function()
-  local mods = replicated:WaitForChild("Modules", 8)
-  local net = mods and mods:WaitForChild("Net", 5)
+  local mods = replicated:WaitForChild("Modules", 3)
+  local net = mods and mods:WaitForChild("Net", 2)
   if net then
     Remotes.RFJobsRemoteFunction = net:FindFirstChild("RF/JobsRemoteFunction")
     Remotes.RFCraft = net:FindFirstChild("RF/Craft") or net:WaitForChild("RF/Craft", 3)
@@ -1357,26 +1357,33 @@ print("[nyann os] loading Zeox Ui...")
 
 local Ui
 do
-  local ok, res = pcall(function()
-    local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua")
-    -- Font Code
-    src = src:gsub("Enum%.Font%.GothamBold", "Enum.Font.Code")
-    src = src:gsub("Enum%.Font%.GothamMedium", "Enum.Font.Code")
-    src = src:gsub("Enum%.Font%.Gotham", "Enum.Font.Code")
-    -- dropdown: respect Default = "" / explicit empty (don't force options[1])
-    src = src:gsub(
-      "local selected = opt%.Default or options%[1%] or ''",
-      "local selected = (opt.Default ~= nil) and opt.Default or (options[1] or '')"
-    )
-    local fn, err = loadstring(src)
-    if not fn then error(err or "compile zeox") end
-    return fn()
-  end)
-  if not ok or not res then
-    error("[nyann os] Zeox Ui fail: " .. tostring(res))
+  -- cache UI lib để load nhanh lần sau trong cùng session
+  if getgenv().NyannZeoxUiLib then
+    Ui = getgenv().NyannZeoxUiLib
+    getgenv().NyannZeoxUi = Ui
+    print("[nyann os] Zeox Ui cached")
+  else
+    local ok, res = pcall(function()
+      local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua")
+      src = src:gsub("Enum%.Font%.GothamBold", "Enum.Font.Code")
+      src = src:gsub("Enum%.Font%.GothamMedium", "Enum.Font.Code")
+      src = src:gsub("Enum%.Font%.Gotham", "Enum.Font.Code")
+      src = src:gsub(
+        "local selected = opt%.Default or options%[1%] or ''",
+        "local selected = (opt.Default ~= nil) and opt.Default or (options[1] or '')"
+      )
+      local fn, err = loadstring(src)
+      if not fn then error(err or "compile zeox") end
+      return fn()
+    end)
+    if not ok or not res then
+      error("[nyann os] Zeox Ui fail: " .. tostring(res))
+    end
+    Ui = res
+    getgenv().NyannZeoxUiLib = Ui
+    getgenv().NyannZeoxUi = Ui
+    print("[nyann os] Zeox Ui OK")
   end
-  Ui = res
-  print("[nyann os] Zeox Ui OK")
 end
 
 local RealWindow = Ui:CreateWindow({
@@ -1781,24 +1788,95 @@ local redzlib = {
 print("[nyann os] Zeox menu ready")
 
 local Tabs = {
-    Info = Window:MakeTab({ Title = "Info", Icon = "" }),
-    Main = Window:MakeTab({ Title = "Main", Icon = "rbxassetid://" }),
-    Font = Window:MakeTab({ Title = "Font", Icon = "rbxassetid://" }),
-    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://" }),
-    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://" }),
-    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://" }),
-    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://" }),
-    Prehistoric = Window:MakeTab({ Title = "Volcano Event", Icon = "" }),
-    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://" }),
-    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://" }),
-    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://" }),
-    Travel = Window:MakeTab({ Title = "Teleport", Icon = "" }),
-    Shop = Window:MakeTab({ Title = "Shop", Icon = "rbxassetid://" }),
-    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://" })
+    Info = Window:MakeTab({ Title = "Thông tin", Icon = "" }),
+    Main = Window:MakeTab({ Title = "Chính", Icon = "rbxassetid://" }),
+    Font = Window:MakeTab({ Title = "Phông chữ", Icon = "rbxassetid://" }),
+    Settings = Window:MakeTab({ Title = "Cài đặt", Icon = "rbxassetid://" }),
+    Fish = Window:MakeTab({ Title = "Câu cá", Icon = "rbxassetid://" }),
+    Quests = Window:MakeTab({ Title = "Nhiệm vụ & Item", Icon = "rbxassetid://" }),
+    SeaEvent = Window:MakeTab({ Title = "Sự kiện biển", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Mirage & Race", Icon = "rbxassetid://" }),
+    Prehistoric = Window:MakeTab({ Title = "Sự kiện núi lửa", Icon = "" }),
+    Esp = Window:MakeTab({ Title = "Chỉ số & Esp", Icon = "rbxassetid://" }),
+    Raids = Window:MakeTab({ Title = "Trái & Raid", Icon = "rbxassetid://" }),
+    Combat = Window:MakeTab({ Title = "Người chơi", Icon = "rbxassetid://" }),
+    Travel = Window:MakeTab({ Title = "Dịch chuyển", Icon = "" }),
+    Shop = Window:MakeTab({ Title = "Cửa hàng", Icon = "rbxassetid://" }),
+    Misc = Window:MakeTab({ Title = "Khác", Icon = "rbxassetid://" })
 }
 
-Tabs.Info:AddSection("Information")
+-- ========================================
+-- Menu text → Tiếng Việt (hiển thị)
+-- ========================================
+do
+  local Dict = {
+    ["Info"]="Thông tin",["Main"]="Chính",["Font"]="Phông chữ",["Setting"]="Cài đặt",["Settings"]="Cài đặt",
+    ["Fishing"]="Câu cá",["Quest And Item"]="Nhiệm vụ & Item",["Sea Event"]="Sự kiện biển",
+    ["Mirage And Race"]="Mirage & Race",["Volcano Event"]="Sự kiện núi lửa",
+    ["Stats And Esp"]="Chỉ số & Esp",["Fruit And Raid"]="Trái & Raid",
+    ["Local Player"]="Người chơi",["Teleport"]="Dịch chuyển",["Shop"]="Cửa hàng",
+    ["Miscellaneous"]="Khác",["Information"]="Thông tin",["Farming"]="Farm",
+    ["Select Weapon"]="Chọn vũ khí",["None"]="Không",["Melee"]="Cận chiến",
+    ["Sword"]="Kiếm",["Blox Fruit"]="Trái ác quỷ",["Gun"]="Súng",
+    ["Auto Farm Level"]="Tự farm level",["Bring Mobs"]="Gom quái",
+    ["Fast Attack"]="Tấn công nhanh",["Anti AFK"]="Chống AFK",
+    ["Auto Farm Nearest"]="Tự farm quái gần",["Auto Factory Raid"]="Tự factory raid",
+    ["Auto Pirate Raid"]="Tự pirate raid",["Auto Farm Ectoplasm"]="Tự farm ectoplasm",
+    ["Auto Farm Chest"]="Tự farm rương",["Auto Chest Bypass"]="Tự rương bypass",
+    ["Stop Items"]="Dừng nhặt item",["Auto Farm Berry"]="Tự farm berry",
+    ["Auto Farm Berry + Hop"]="Tự farm berry + hop",["Select Mob"]="Chọn quái",
+    ["Auto Kill Mob"]="Tự giết quái",["Select Island"]="Chọn đảo",
+    ["Auto Farm All Island"]="Tự farm mọi đảo",["Auto Farm Elite"]="Tự farm elite",
+    ["Auto Farm Elite + Hop"]="Tự farm elite + hop",["Auto Attack Rip Indra"]="Tự đánh Rip Indra",
+    ["Auto Unlocked Haki"]="Tự mở khóa Haki",["Auto Farm Cake Prince"]="Tự farm Cake Prince",
+    ["Auto Farm Bone"]="Tự farm Bone",["Collect Berry"]="Nhặt berry",
+    ["Farm Mob"]="Farm quái",["Farm All Island"]="Farm mọi đảo",
+    ["Farm Elite Hunter"]="Farm Elite Hunter",["Farm Rip Indra"]="Farm Rip Indra",
+    ["Farming Cake"]="Farm Cake",["Chest"]="Rương",
+    ["Settings / Configure"]="Cài đặt / Tùy chỉnh",["Menu Theme"]="Giao diện menu",
+    ["Select Theme"]="Chọn giao diện",["Server - Function"]="Máy chủ - Chức năng",
+    ["Player Gui / Others"]="Giao diện / Khác",["Graphics / Haki Stats"]="Đồ họa / Chỉ số Haki",
+    ["Configure - God"]="Cấu hình - God",["Turn on Full Bright"]="Bật sáng tối đa",
+    ["Select Time"]="Chọn thời gian",["Turn on Time"]="Bật thời gian",
+    ["Turn on Walk on Water"]="Đi trên nước",["Turn on Ice Walk"]="Đi trên băng",
+    ["Rain Fruits (Client)"]="Mưa trái (Client)",["Remove Sky Fog"]="Xóa sương trời",
+    ["Day"]="Ngày",["Night"]="Đêm",["Options"]="Tùy chọn",["Run"]="Chạy",["Close"]="Đóng",
+    ["Dark"]="Tối",["Light"]="Sáng",["DarkRed"]="Đỏ tối",["Crimson"]="Đỏ thẫm",
+    ["Ruby"]="Hồng ngọc",["Obsidian"]="Đá đen",["Inferno"]="Địa ngục",
+    ["Blood Moon"]="Trăng máu",["Shadow Red"]="Đỏ bóng",
+  }
+  local function apply()
+    local roots = { game:GetService("CoreGui") }
+    pcall(function() if gethui then table.insert(roots, gethui()) end end)
+    pcall(function()
+      local pg = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+      if pg then table.insert(roots, pg) end
+    end)
+    for _, root in ipairs(roots) do
+      for _, o in ipairs(root:GetDescendants()) do
+        if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then
+          local t = o.Text
+          if t and Dict[t] then
+            o.Text = Dict[t]
+          elseif t and t:match("^Font: ") then
+            o.Text = t:gsub("^Font: ", "Phông: ")
+          elseif t and t:match("^Auto ") and not Dict[t] then
+            -- giữ tên kỹ thuật nếu chưa có dict
+          end
+        end
+      end
+    end
+  end
+  task.defer(function()
+    task.wait(0.15)
+    apply()
+  end)
+  print("[nyann os] menu tiếng Việt ready")
+end
+
+
+
+Tabs.Info:AddSection("Thông tin")
 
 Tabs.Info:AddDiscordInvite({
 	Title = "Nyann | Community🇻🇳👑",
@@ -1849,7 +1927,7 @@ Tabs.Info:AddDiscordInvite({
 -- PHẦN CHỌN FONT (thêm vào tab Font)
 -- ==========================================
 
-Tabs.Font:AddSection("Font")
+Tabs.Font:AddSection("Phông chữ")
 
 local currentFont = Enum.Font.Arial
 
@@ -1900,7 +1978,7 @@ local RFSubmarineWorkerSpeak = replicated.Modules.Net["RF/SubmarineWorkerSpeak"]
 _G.ChooseWP = nil
 _G.SelectWeapon = nil
 WeaponDropdown = Tabs.Main:AddDropdown({
-    Name = "Select Weapon",
+    Name = "Chọn vũ khí",
     Options = {"Melee", "Sword", "Blox Fruit", "Gun"},
     Default = "None",
     Callback = function(Value)
@@ -1949,10 +2027,10 @@ spawn(function()
         end)
     end
 end)
-Tabs.Main:AddSection("Farming")
+Tabs.Main:AddSection("Farm")
 
 FarmLevel = Tabs.Main:AddToggle({
-    Name = "Auto Farm Level",
+    Name = "Tự farm level",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -2115,7 +2193,7 @@ task.spawn(function()
 end)
 
 ClosetMons = Tabs.Main:AddToggle({
-Name = "Auto Farm Nearest", 
+Name = "Tự farm quái gần", 
 Description = "", 
 Default = false, 
 Callback = function(Value)
@@ -2137,7 +2215,7 @@ spawn(function()
   end
 end)
 FactoryRaids = Tabs.Main:AddToggle({
-Name = "Auto Factory Raid", 
+Name = "Tự factory raid", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2162,7 +2240,7 @@ spawn(function()
 end)
 
 CastleRaids = Tabs.Main:AddToggle({
-Name = "Auto Pirate Raid", 
+Name = "Tự pirate raid", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2202,7 +2280,7 @@ end)
 
 
 Ecto = Tabs.Main:AddToggle({
-Name = "Auto Farm Ectoplasm", 
+Name = "Tự farm ectoplasm", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2224,10 +2302,10 @@ spawn(function()
   end
 end)
 
-Tabs.Main:AddSection("Chest")
+Tabs.Main:AddSection("Rương")
 
 ChestTW = Tabs.Main:AddToggle({
-Name = "Auto Farm Chest", 
+Name = "Tự farm rương", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2262,7 +2340,7 @@ spawn(function()
 end)
 
 ChestBP = Tabs.Main:AddToggle({
-    Name = "Auto Chest Bypass", 
+    Name = "Tự rương bypass", 
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -2337,7 +2415,7 @@ ChestBP = Tabs.Main:AddToggle({
 })
 
 StopI = Tabs.Main:AddToggle({
-Name = "Stop Items", 
+Name = "Dừng nhặt item", 
 Description = "", 
 Default = true, -- auto ON
 Callback = function(Value)
@@ -2357,10 +2435,10 @@ spawn(function()
     end
 end)
 
-Tabs.Main:AddSection("Collect Berry")
+Tabs.Main:AddSection("Nhặt berry")
 
 Berry = Tabs.Main:AddToggle({
-Name = "Auto Farm Berry", 
+Name = "Tự farm berry", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2398,7 +2476,7 @@ end)
 
 
 BerryH = Tabs.Main:AddToggle({
-Name = "Auto Farm Berry + Hop", 
+Name = "Tự farm berry + hop", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -2455,10 +2533,10 @@ spawn(function()
     end
 end)
 
-Tabs.Main:AddSection("Farm Mob")
+Tabs.Main:AddSection("Farm quái")
 if World1 then
     Tabs.Main:AddDropdown({
-        Name = "Select Mob",
+        Name = "Chọn quái",
         Default = Bandit,
         Options = {
             "Bandit", "Monkey", "Gorilla", "Pirate", "Brute",
@@ -2476,7 +2554,7 @@ if World1 then
 end
 if World2 then
     Tabs.Main:AddDropdown({
-        Name = "Select Mob",
+        Name = "Chọn quái",
         Default = Raider,
         Options = {
             "Raider", "Mercenary", "Swan Pirate", "Factory Staff",
@@ -2493,7 +2571,7 @@ if World2 then
 end
 if World3 then
     Tabs.Main:AddDropdown({
-        Name = "Select Mob",
+        Name = "Chọn quái",
         Options = {
             "Pirate Millionaire", "Dragon Crew Warrior", "Dragon Crew Archer",
             "Female Islander", "Giant Islander", "Marine Commodore",
@@ -2513,7 +2591,7 @@ if World3 then
     })
 end
 Tabs.Main:AddToggle({
-    Name = "Auto Kill Mob",
+    Name = "Tự giết quái",
     Default = false,
     Callback = function(Value)
         _G.AutoKillMob = Value
@@ -2542,7 +2620,7 @@ spawn(function()
     end
 end)
 
-Tabs.Main:AddSection("Farm All Island")
+Tabs.Main:AddSection("Farm mọi đảo")
 
 local Sea1_Islands = {
     ["Pirates"] = {
@@ -2786,7 +2864,7 @@ local Sea3_Islands = {
 
 if World1 then
     Tabs.Main:AddDropdown({
-        Name = "Select Island",
+        Name = "Chọn đảo",
         Options = {"Pirates", "Marine", "Jungle", "Pirate Village", "Desert", "Frozen Village", "Marine Fortress", "Skylands Lower", "Prison", "Colosseum", "Magma Village", "Underwater City", "Skylands Upper"},
         Callback = function(Value)
             _G.SelectIsland = Value
@@ -2796,7 +2874,7 @@ end
 
 if World2 then
     Tabs.Main:AddDropdown({
-        Name = "Select Island",
+        Name = "Chọn đảo",
         Options = {"Kingdom of Rose", "Green Zone", "Graveyard Island", "Snow Mountain", "Hot and Cold (Cold)", "Hot and Cold (Hot)", "Cursed Ship", "Ice Castle", "Forgotten Island"},
         Callback = function(Value)
             _G.SelectIsland = Value
@@ -2806,7 +2884,7 @@ end
 
 if World3 then
     Tabs.Main:AddDropdown({
-        Name = "Select Island",
+        Name = "Chọn đảo",
         Options = {"Port Town", "Hydra Island", "Great Tree", "Floating Turtle", "Haunted Castle", "Sea of Treats", "Tiki Outpost", "Submerged Island"},
         Callback = function(Value)
             _G.SelectIsland = Value
@@ -2822,7 +2900,7 @@ elseif World3 then
     IslandData = Sea3_Islands
 end
 Tabs.Main:AddToggle({
-    Name = "Auto Farm All Island",
+    Name = "Tự farm mọi đảo",
     Default = false,
     Callback = function(Value)
         _G.AutoFarmIsland = Value
@@ -2902,7 +2980,7 @@ spawn(function()
 end)
 
 EliteQ = Tabs.Main:AddToggle({
-    Name = "Auto Farm Elite",
+    Name = "Tự farm elite",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -2972,7 +3050,7 @@ spawn(function()
 end)
 
 EliteH = Tabs.Main:AddToggle({
-	Name = "Auto Farm Elite + Hop",
+	Name = "Tự farm elite + hop",
 	Description = "",
 	Default = false,
 	Callback = function(Value)
@@ -3078,7 +3156,7 @@ end)
 Tabs.Main:AddSection("Farm Rip Indra")
 
 Tabs.Main:AddToggle({
-Name = "Auto Attack Rip Indra", 
+Name = "Tự đánh Rip Indra", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -3101,7 +3179,7 @@ spawn(function()
 end)
 
 Tabs.Main:AddToggle({
-Name = "Auto Unlocked Haki", 
+Name = "Tự mở khóa Haki", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -3139,7 +3217,7 @@ spawn(function()
   end
 end)
 
-Tabs.Main:AddSection("Farming Cake")
+Tabs.Main:AddSection("Farm Cake")
 local MobKilled = Tabs.Main:AddParagraph("Cake Princes", "")
 spawn(function()
     while wait(0.2) do
@@ -3153,7 +3231,7 @@ spawn(function()
 end)
 
 Cake = Tabs.Main:AddToggle({
-    Name = "Auto Farm Cake Prince",
+    Name = "Tự farm Cake Prince",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -3422,7 +3500,7 @@ spawn(function()
 end)
 
 Tabs.Main:AddToggle({
-    Name = "Auto Farm Bone",
+    Name = "Tự farm Bone",
     Description = "",
     Default = false,
     Callback = function(Value)
@@ -4167,17 +4245,62 @@ end)
 
 
 
-Tabs.Settings:AddSection("Settings / Configure")
+
+Tabs.Settings:AddSection("Giao diện menu")
+Tabs.Settings:AddDropdown({
+  Name = "Chọn giao diện",
+  Options = {
+    "Dark",
+    "Light",
+    "DarkRed",
+    "Crimson",
+    "Ruby",
+    "Obsidian",
+    "Inferno",
+    "Blood Moon",
+    "Shadow Red",
+  },
+  Default = "Dark",
+  Callback = function(Value)
+    local map = {
+      ["Dark"] = "Dark",
+      ["Light"] = "Light",
+      ["DarkRed"] = "DarkRed",
+      ["Crimson"] = "Crimson",
+      ["Ruby"] = "Ruby",
+      ["Obsidian"] = "Obsidian",
+      ["Inferno"] = "Inferno",
+      ["Blood Moon"] = "Blood Moon",
+      ["Shadow Red"] = "Shadow Red",
+    }
+    local key = map[Value] or Value
+    pcall(function()
+      local lib = getgenv().NyannZeoxUi or Ui
+      if lib and lib.SetTheme then
+        lib:SetTheme(key)
+      end
+    end)
+    pcall(function()
+      Window:Notify({
+        Title = "Theme",
+        Content = "Applied: " .. tostring(Value),
+        Duration = 2,
+      })
+    end)
+  end,
+})
+
+Tabs.Settings:AddSection("Cài đặt / Tùy chỉnh")
 
 Initialize = Tabs.Settings:AddToggle({
-Name = "Fast Attack", 
+Name = "Tấn công nhanh", 
 Description = "", 
 Default = true,
 Callback = function(Value)
   _G.Seriality = Value
 end})
 Bringmob = Tabs.Settings:AddToggle({
-Name = "Bring Mobs", 
+Name = "Gom quái", 
 Description = "", 
 Default = true,
 Callback = function(Value)
@@ -4425,7 +4548,7 @@ spawn(function()
 end)      
 
 Tabs.Settings:AddToggle({
-    Name = "Anti AFK",
+    Name = "Chống AFK",
     Default = true, -- auto ON
     Callback = function(Value)
         if Value then
@@ -11558,187 +11681,7 @@ Tabs.Shop:AddButton({
 })
 
 
--- ========================================
--- LANGUAGE: English <-> Tiếng Việt (FULL MENU)
--- ========================================
-do
-  local HttpService = game:GetService("HttpService")
-  local CoreGui = game:GetService("CoreGui")
-  local Players = game:GetService("Players")
-
-  _G.NyannLang = "en"
-  local Cache = {}
-
-  -- Từ điển EN -> VI (tab + control thường gặp)
-  local Dict = {
-    ["Info"] = "Thông tin",
-    ["Main"] = "Chính",
-    ["Font"] = "Font",
-    ["Setting"] = "Cài đặt",
-    ["Settings"] = "Cài đặt",
-    ["Fishing"] = "Câu cá",
-    ["Quest And Item"] = "Nhiệm vụ & Item",
-    ["Quest"] = "Nhiệm vụ",
-    ["Sea Event"] = "Sự kiện biển",
-    ["Mirage And Race"] = "Mirage & Race",
-    ["Volcano Event"] = "Sự kiện núi lửa",
-    ["Stats And Esp"] = "Stats & Esp",
-    ["Fruit And Raid"] = "Fruit & Raid",
-    ["Local Player"] = "Người chơi",
-    ["Teleport"] = "Dịch chuyển",
-    ["Shop"] = "Cửa hàng",
-    ["Miscellaneous"] = "Khác",
-    ["Misc"] = "Khác",
-    ["Information"] = "Thông tin",
-    ["Farming"] = "Farm",
-    ["Select Weapon"] = "Chọn vũ khí",
-    ["None"] = "Không",
-    ["Melee"] = "Cận chiến",
-    ["Sword"] = "Kiếm",
-    ["Blox Fruit"] = "Trái ác quỷ",
-    ["Gun"] = "Súng",
-    ["Auto Farm Level"] = "Tự farm level",
-    ["Bring Mod"] = "Gom quái",
-    ["Fast Attack"] = "Tấn công nhanh",
-    ["Anti AFK"] = "Chống AFK",
-    ["Language"] = "Ngôn ngữ",
-    ["English"] = "English",
-    ["Tiếng Việt"] = "Tiếng Việt",
-    ["Server - Function"] = "Máy chủ - Chức năng",
-    ["Player Gui / Others"] = "Giao diện / Khác",
-    ["Turn on Full Bright"] = "Bật sáng tối đa",
-    ["Select Time"] = "Chọn thời gian",
-    ["Turn on Time"] = "Bật thời gian",
-    ["Turn on Walk on Water"] = "Đi trên nước",
-    ["Turn on Ice Walk"] = "Đi trên băng",
-    ["Day"] = "Ngày",
-    ["Night"] = "Đêm",
-    ["Destroy Menu"] = "Xóa menu",
-    ["Options"] = "Tùy chọn",
-    ["Run"] = "Chạy",
-    ["Close"] = "Đóng",
-    ["Confirm"] = "Xác nhận",
-    ["Cancel"] = "Hủy",
-  }
-  local DictRev = {}
-  for en, vi in pairs(Dict) do DictRev[vi] = en end
-
-  local function Google(text, tl)
-    if not text or text == "" or tonumber(text) or #tostring(text) < 2 then return text end
-    local key = tl .. ":" .. text
-    if Cache[key] then return Cache[key] end
-    local url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
-      .. tl .. "&dt=t&q=" .. HttpService:UrlEncode(text)
-    local ok, res = pcall(function() return game:HttpGet(url) end)
-    if ok then
-      local s, data = pcall(function() return HttpService:JSONDecode(res) end)
-      if s and data and data[1] and data[1][1] and data[1][1][1] then
-        Cache[key] = data[1][1][1]
-        return Cache[key]
-      end
-    end
-    return text
-  end
-
-  local function ToVI(text)
-    if Dict[text] then return Dict[text] end
-    return Google(text, "vi")
-  end
-
-  local function Roots()
-    local r = { CoreGui }
-    pcall(function()
-      if gethui then table.insert(r, gethui()) end
-    end)
-    pcall(function()
-      local pg = Players.LocalPlayer:FindFirstChild("PlayerGui")
-      if pg then table.insert(r, pg) end
-    end)
-    return r
-  end
-
-  local function ApplyAll(lang)
-    _G.NyannLang = lang
-    local n = 0
-    for _, root in ipairs(Roots()) do
-      for _, obj in ipairs(root:GetDescendants()) do
-        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-          local txt = obj.Text
-          if txt and txt ~= "" and not tonumber(txt) then
-            if not obj:GetAttribute("NyannRaw") then
-              obj:SetAttribute("NyannRaw", DictRev[txt] or txt)
-            end
-            local raw = obj:GetAttribute("NyannRaw")
-            if lang == "en" then
-              if obj.Text ~= raw then
-                obj.Text = raw
-                n = n + 1
-              end
-            else
-              local vi = ToVI(raw)
-              if obj.Text ~= vi then
-                obj.Text = vi
-                n = n + 1
-              end
-            end
-          end
-        end
-      end
-    end
-    print("[nyann os] language =", lang, "updated =", n)
-  end
-
-  local function ApplyLanguage(lang)
-    ApplyAll(lang)
-    task.delay(0.2, function() ApplyAll(lang) end)
-    task.delay(0.5, function() ApplyAll(lang) end)
-    task.delay(1.0, function() ApplyAll(lang) end)
-  end
-
-  for _, root in ipairs(Roots()) do
-    pcall(function()
-      root.DescendantAdded:Connect(function(obj)
-        task.wait(0.05)
-        if not (obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox")) then return end
-        if not obj.Text or obj.Text == "" then return end
-        if not obj:GetAttribute("NyannRaw") then
-          obj:SetAttribute("NyannRaw", DictRev[obj.Text] or obj.Text)
-        end
-        if _G.NyannLang == "vi" then
-          local vi = ToVI(obj:GetAttribute("NyannRaw"))
-          if obj.Text ~= vi then obj.Text = vi end
-        end
-      end)
-    end)
-  end
-
-  if Tabs and Tabs.Misc then
-    Tabs.Misc:AddSection("Language")
-    Tabs.Misc:AddButton({
-      Name = "English",
-      Callback = function()
-        ApplyLanguage("en")
-        pcall(function()
-          Window:Notify({ Title = "Language", Content = "English — all menu text restored", Duration = 2 })
-        end)
-      end,
-    })
-    Tabs.Misc:AddButton({
-      Name = "Tiếng Việt",
-      Callback = function()
-        ApplyLanguage("vi")
-        pcall(function()
-          Window:Notify({ Title = "Ngôn ngữ", Content = "Tiếng Việt — toàn bộ menu", Duration = 2 })
-        end)
-      end,
-    })
-  end
-
-  print("[nyann os] full language switch ready (EN/VI)")
-end
-
-
-Tabs.Misc:AddSection("Server - Function")
+Tabs.Misc:AddSection("Máy chủ - Chức năng")
 Tabs.Misc:AddButton({
     Name = "Redeem All Codes",
     Description = "",
@@ -11906,7 +11849,7 @@ Callback = function()
   setclipboard(tostring(game.JobId))
 end})
 
-Tabs.Misc:AddSection("Player Gui / Others")
+Tabs.Misc:AddSection("Giao diện / Khác")
 
 Tabs.Misc:AddButton({
 Name = "Open Awakenings Expert", 
@@ -11988,7 +11931,7 @@ spawn(function()
   end
 end)
 
-Tabs.Misc:AddSection("Graphics / Haki Stats")
+Tabs.Misc:AddSection("Đồ họa / Chỉ số Haki")
 
 HakiSt = {"State 0","State 1","State 2","State 3","State 4","State 5"}
 HakiStat = Tabs.Misc:AddDropdown({
@@ -12087,7 +12030,7 @@ Callback = function()
   end
 end})
 Tabs.Misc:AddButton({
-Name = "Remove Sky Fog", 
+Name = "Xóa sương trời", 
 Description = "",
 Callback = function()
   if Lighting:FindFirstChild("LightingLayers") then Lighting.LightingLayers:Destroy() end
@@ -12095,9 +12038,9 @@ Callback = function()
   if Lighting:FindFirstChild("FantasySky") then Lighting.FantasySky:Destroy() end
 end})
 
-Tabs.Misc:AddSection("Configure - God")
+Tabs.Misc:AddSection("Cấu hình - God")
 Tabs.Misc:AddButton({
-Name = "Rain Fruits (Client)", 
+Name = "Mưa trái (Client)", 
 Description = "",
 Callback = function()
   for i, v in pairs(game:GetObjects("rbxassetid://14759368201")[1]:GetChildren()) do
@@ -12115,7 +12058,7 @@ Callback = function()
   end
 end})
 briggt1 = Tabs.Misc:AddToggle({
-Name = "Turn on Full Bright", 
+Name = "Bật sáng tối đa", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -12134,7 +12077,7 @@ end
 
 
 DayN = Tabs.Misc:AddDropdown({
-Name = "Select Time",
+Name = "Chọn thời gian",
 Description = "",
 Options = {"Day", "Night"},
 Default = Day,
@@ -12142,7 +12085,7 @@ Callback = function(Value)
   _G.SelectDN = Value
 end})
 dayornight = Tabs.Misc:AddToggle({
-Name = "Turn on Time", 
+Name = "Bật thời gian", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -12160,7 +12103,7 @@ task.spawn(function()
   end
 end)
 walkWater = Tabs.Misc:AddToggle({
-Name = "Turn on Walk on Water", 
+Name = "Đi trên nước", 
 Description = "", 
 Default = true,
 Callback = function(Value)
@@ -12173,7 +12116,7 @@ Callback = function(Value)
 end
 })
 iceWalk = Tabs.Misc:AddToggle({
-Name = "Turn on Ice Walk", 
+Name = "Đi trên băng", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -12567,7 +12510,7 @@ task.spawn(function()
     BarColor = Color3.fromRGB(255, 255, 255), -- white bar
   })
 
-  task.wait(2)
+  task.wait(0.5)
 
   local notif2 = Alurt.CreateNode({
     Title = "Script beta nên còn lỗi nhé",
