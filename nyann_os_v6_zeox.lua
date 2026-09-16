@@ -5,15 +5,15 @@ do
   -- chờ character (timeout) — tránh crash không hiện menu
   do
     local t0 = tick()
-    while (not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart")) and tick() - t0 < 4 do
-      task.wait(0.05)
+    while (not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart")) and tick() - t0 < 20 do
+      task.wait(0.1)
     end
   end
   Root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
   replicated = game:GetService("ReplicatedStorage")
   pcall(function()
-    plr:WaitForChild("Data", 3)
-    if plr:FindFirstChild("Data") then plr.Data:WaitForChild("Level", 2) end
+    plr:WaitForChild("Data", 10)
+    if plr:FindFirstChild("Data") then plr.Data:WaitForChild("Level", 5) end
   end)
   Lv = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or 1
   TeleportService = game:GetService("TeleportService")
@@ -47,7 +47,7 @@ do
   Num_self = 25
   pcall(function()
     plr.CharacterAdded:Connect(function(char)
-      local hrp = char:WaitForChild("HumanoidRootPart", 5)
+      local hrp = char:WaitForChild("HumanoidRootPart", 10)
       if hrp then Root = hrp end
     end)
   end)
@@ -59,8 +59,8 @@ do
   repeat
     local loading = plr.PlayerGui and plr.PlayerGui:FindFirstChild("Main")
     loading = loading and loading:FindFirstChild("Loading")
-    task.wait(0.05)
-  until (game:IsLoaded() and not (loading and loading.Visible)) or (tick() - t0 > 5)
+    task.wait(0.1)
+  until (game:IsLoaded() and not (loading and loading.Visible)) or (tick() - t0 > 20)
 end
 print("[nyann os] game ready")
 World1 = game.PlaceId == 2753915549 or game.PlaceId == 85211729168715
@@ -68,10 +68,24 @@ World2 = game.PlaceId == 4442272183 or game.PlaceId == 79091703265657
 World3 = game.PlaceId == 7449423635 or game.PlaceId == 100117331123089
 Marines = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Marines") end
 Pirates = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Pirates") end
-if World1 then BossList = {"The Gorilla King","Bobby","The Saw","Yeti","Mob Leader","Vice Admiral","Saber Expert","Warden","Chief Warden","Swan","Magma Admiral","Fishman Lord","Wysper","Thunder God","Cyborg","Ice Admiral","Greybeard"}
-elseif World2 then BossList = {"Diamond","Jeremy","Orbitus","Don Swan","Smoke Admiral","Awakened Ice Admiral","Tide Keeper","Darkbeard","Cursed Captain","Order"}
-elseif World3 then BossList = {"Stone","Hydra Leader","Kilo Admiral","Captain Elephant","Beautiful Pirate","Cake Queen","Dough King","Longma","Soul Reaper","rip_indra True Form","Tyrant of the Skies"}
+-- Boss list theo sea (luôn có danh sách để dropdown hiện)
+local BossList_W1 = {"The Gorilla King","Bobby","The Saw","Yeti","Mob Leader","Vice Admiral","Saber Expert","Warden","Chief Warden","Swan","Magma Admiral","Fishman Lord","Wysper","Thunder God","Cyborg","Ice Admiral","Greybeard"}
+local BossList_W2 = {"Diamond","Jeremy","Orbitus","Don Swan","Smoke Admiral","Awakened Ice Admiral","Tide Keeper","Darkbeard","Cursed Captain","Order"}
+local BossList_W3 = {"Stone","Hydra Leader","Kilo Admiral","Captain Elephant","Beautiful Pirate","Cake Queen","Dough King","Longma","Soul Reaper","rip_indra True Form","Tyrant of the Skies"}
+if World1 then
+  BossList = BossList_W1
+elseif World2 then
+  BossList = BossList_W2
+elseif World3 then
+  BossList = BossList_W3
+else
+  -- fallback: gộp cả 3 sea nếu PlaceId lạ
+  BossList = {}
+  for _, n in ipairs(BossList_W1) do table.insert(BossList, n) end
+  for _, n in ipairs(BossList_W2) do table.insert(BossList, n) end
+  for _, n in ipairs(BossList_W3) do table.insert(BossList, n) end
 end
+print("[nyann os] BossList count =", #BossList, "World1/2/3 =", World1, World2, World3)
 if World1 then MaterialList = {"Leather + Scrap Metal", "Angel Wings", "Magma Ore", "Fish Tail"}
 elseif World2 then MaterialList = {"Leather + Scrap Metal", "Radioactive Material", "Ectoplasm", "Mystic Droplet", "Magma Ore", "Vampire Fang"}
 elseif World3 then MaterialList = {"Scrap Metal", "Demonic Wisp", "Conjured Cocoa", "Dragon Scale", "Gunpowder", "Fish Tail", "Mini Tusk"}
@@ -89,8 +103,8 @@ local mastery2 = {"Reborn Skeleton"}
 local PosMsList = {["Pirate Millionaire"] = CFrame.new(-712.8272705078125, 98.5770492553711, 5711.9541015625),["Pistol Billionaire"] = CFrame.new(-723.4331665039062, 147.42906188964844, 5931.9931640625),["Dragon Crew Warrior"] = CFrame.new(7021.50439453125, 55.76270294189453, -730.1290893554688),["Dragon Crew Archer"] = CFrame.new(6625, 378, 244),["Female Islander"] = CFrame.new(4692.7939453125, 797.9766845703125, 858.8480224609375),["Venomous Assailant"] = CFrame.new(4902, 670, 39), ["Marine Commodore"] = CFrame.new(2401, 123, -7589),["Marine Rear Admiral"] = CFrame.new(3588, 229, -7085),["Fishman Raider"] = CFrame.new(-10941, 332, -8760),["Fishman Captain"] = CFrame.new(-11035, 332, -9087),["Forest Pirate"] = CFrame.new(-13446, 413, -7760),["Mythological Pirate"] = CFrame.new(-13510, 584, -6987),["Jungle Pirate"] = CFrame.new(-11778, 426, -10592),["Musketeer Pirate"] = CFrame.new(-13282, 496, -9565),["Reborn Skeleton"] = CFrame.new(-8764, 142, 5963),["Living Zombie"] = CFrame.new(-10227, 421, 6161),["Demonic Soul"] = CFrame.new(-9579, 6, 6194),["Posessed Mummy"] = CFrame.new(-9579, 6, 6194),["Peanut Scout"] = CFrame.new(-1993, 187, -10103),["Peanut President"] = CFrame.new(-2215, 159, -10474),["Ice Cream Chef"] = CFrame.new(-877, 118, -11032),["Ice Cream Commander"] = CFrame.new(-877, 118, -11032),["Cookie Crafter"] = CFrame.new(-2021, 38, -12028),["Cake Guard"] = CFrame.new(-2024, 38, -12026),["Baking Staff"] = CFrame.new(-1932, 38, -12848),["Head Baker"] = CFrame.new(-1932, 38, -12848),["Cocoa Warrior"] = CFrame.new(95, 73, -12309),["Chocolate Bar Battler"] = CFrame.new(647, 42, -12401),["Sweet Thief"] = CFrame.new(116, 36, -12478),["Candy Rebel"] = CFrame.new(47, 61, -12889),["Ghost"] = CFrame.new(5251, 5, 1111)}
 local Remotes = { RFJobsRemoteFunction = nil, RFCraft = nil }
 pcall(function()
-  local mods = replicated:WaitForChild("Modules", 3)
-  local net = mods and mods:WaitForChild("Net", 2)
+  local mods = replicated:WaitForChild("Modules", 8)
+  local net = mods and mods:WaitForChild("Net", 5)
   if net then
     Remotes.RFJobsRemoteFunction = net:FindFirstChild("RF/JobsRemoteFunction")
     Remotes.RFCraft = net:FindFirstChild("RF/Craft") or net:WaitForChild("RF/Craft", 3)
@@ -634,7 +648,7 @@ sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
     ["Tween Speed"] = 1.5, -- bay (duration = distance/(100*speed))
-    ["Bypass Teleport"] = true,
+    ["Bypass Teleport"] = false, -- tắt bypass reset (lỗi farm Cake/Bone/Level)
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
     ["Same Y"] = false
@@ -809,26 +823,8 @@ function GetBypassCFrame(x)
 end
 
 function BypassTP(Target)
-    local Character = LocalPlayer.Character
-    if not Character then return end
-    
-    local Humanoid = WaitForHumanoid()
-    if not Humanoid or Humanoid.Health <= 0 then return end
-    
-    if CanBypassTeleport(Target) and GetBypassCFrame(Target) then
-        local TargetTP = GetBypassCFrame(Target)
-        if TargetTP and TargetTP:FindFirstChild("Part") then
-            Character.LastSpawnPoint.Disabled = true
-            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetLastSpawnPoint", TargetTP.Name)
-            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetSpawnPoint")
-            Character:PivotTo(TargetTP.Part.CFrame)
-            Humanoid:ChangeState(15)
-            
-            repeat 
-                task.wait() 
-            until LocalPlayer.Character and WaitForHumanoid() and WaitForHumanoid().Health > 0
-        end
-    end
+    -- Không dùng reset/kill (ChangeState 15) — dễ lỗi khi farm Cake / Bone / Level
+    return
 end
 
 function totopofgreattree()
@@ -932,8 +928,9 @@ _tp = function(target)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local rootPart = character.HumanoidRootPart
     
+    local skipBypass = _G.Auto_Cake_Prince or _G.AutoFarm_Bone or _G.Level or _G.AutoFarmNear
     pcall(function()
-        if CanBypassTeleport(gg) then
+        if not skipBypass and Settings["Bypass Teleport"] and CanBypassTeleport(gg) then
             BypassTP(gg)
             task.wait(0.5)
         end
@@ -1357,33 +1354,27 @@ print("[nyann os] loading Zeox Ui...")
 
 local Ui
 do
-  -- cache UI lib để load nhanh lần sau trong cùng session
-  if getgenv().NyannZeoxUiLib then
-    Ui = getgenv().NyannZeoxUiLib
-    getgenv().NyannZeoxUi = Ui
-    print("[nyann os] Zeox Ui cached")
-  else
-    local ok, res = pcall(function()
-      local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua")
-      src = src:gsub("Enum%.Font%.GothamBold", "Enum.Font.Code")
-      src = src:gsub("Enum%.Font%.GothamMedium", "Enum.Font.Code")
-      src = src:gsub("Enum%.Font%.Gotham", "Enum.Font.Code")
-      src = src:gsub(
-        "local selected = opt%.Default or options%[1%] or ''",
-        "local selected = (opt.Default ~= nil) and opt.Default or (options[1] or '')"
-      )
-      local fn, err = loadstring(src)
-      if not fn then error(err or "compile zeox") end
-      return fn()
-    end)
-    if not ok or not res then
-      error("[nyann os] Zeox Ui fail: " .. tostring(res))
-    end
-    Ui = res
-    getgenv().NyannZeoxUiLib = Ui
-    getgenv().NyannZeoxUi = Ui
-    print("[nyann os] Zeox Ui OK")
+  local ok, res = pcall(function()
+    local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/test/refs/heads/main/Zeox_Ui_Code.lua")
+    -- Font Code
+    src = src:gsub("Enum%.Font%.GothamBold", "Enum.Font.Code")
+    src = src:gsub("Enum%.Font%.GothamMedium", "Enum.Font.Code")
+    src = src:gsub("Enum%.Font%.Gotham", "Enum.Font.Code")
+    -- dropdown: respect Default = "" / explicit empty (don't force options[1])
+    src = src:gsub(
+      "local selected = opt%.Default or options%[1%] or ''",
+      "local selected = (opt.Default ~= nil) and opt.Default or (options[1] or '')"
+    )
+    local fn, err = loadstring(src)
+    if not fn then error(err or "compile zeox") end
+    return fn()
+  end)
+  if not ok or not res then
+    error("[nyann os] Zeox Ui fail: " .. tostring(res))
   end
+  Ui = res
+  getgenv().NyannZeoxUi = Ui
+  print("[nyann os] Zeox Ui OK")
 end
 
 local RealWindow = Ui:CreateWindow({
@@ -1868,8 +1859,18 @@ do
     end
   end
   task.defer(function()
-    task.wait(0.15)
+    task.wait(0.4)
     apply()
+    task.wait(0.8)
+    apply()
+  end)
+  pcall(function()
+    game:GetService("CoreGui").DescendantAdded:Connect(function()
+      task.wait(0.05)
+      if _G.NyannSkipVi then return end
+      -- light pass
+      apply()
+    end)
   end)
   print("[nyann os] menu tiếng Việt ready")
 end
@@ -3907,14 +3908,30 @@ end)
 
 Tabs.Main:AddSection("Farm Boss")
 
-		BossDropdown = Tabs.Main:AddDropdown({
-		Name = "Select Boss",
-		Description = "",
-		Options = BossList,
-		Callback = function(value)
-			_G.FindBoss = value
+		do
+			-- copy list (tránh table rỗng / reference lỗi)
+			local bossOpts = {}
+			if type(BossList) == "table" then
+				for _, n in ipairs(BossList) do
+					table.insert(bossOpts, n)
+				end
+			end
+			if #bossOpts == 0 then
+				bossOpts = {"(no boss list — check PlaceId)"}
+			end
+			BossDropdown = Tabs.Main:AddDropdown({
+				Name = "Select Boss",
+				Description = "Boss theo sea hiện tại",
+				Options = bossOpts,
+				Default = bossOpts[1],
+				Callback = function(value)
+					if value and value ~= "(no boss list — check PlaceId)" then
+						_G.FindBoss = value
+					end
+				end
+			})
+			print("[nyann os] Boss dropdown options =", #bossOpts)
 		end
-		})
 
 FarmBoss = Tabs.Main:AddToggle({
     Name = "Auto Farm Boss",
@@ -12510,7 +12527,7 @@ task.spawn(function()
     BarColor = Color3.fromRGB(255, 255, 255), -- white bar
   })
 
-  task.wait(0.5)
+  task.wait(2)
 
   local notif2 = Alurt.CreateNode({
     Title = "Script beta nên còn lỗi nhé",
