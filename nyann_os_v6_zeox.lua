@@ -68,24 +68,10 @@ World2 = game.PlaceId == 4442272183 or game.PlaceId == 79091703265657
 World3 = game.PlaceId == 7449423635 or game.PlaceId == 100117331123089
 Marines = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Marines") end
 Pirates = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Pirates") end
--- Boss list theo sea (luôn có danh sách để dropdown hiện)
-local BossList_W1 = {"The Gorilla King","Bobby","The Saw","Yeti","Mob Leader","Vice Admiral","Saber Expert","Warden","Chief Warden","Swan","Magma Admiral","Fishman Lord","Wysper","Thunder God","Cyborg","Ice Admiral","Greybeard"}
-local BossList_W2 = {"Diamond","Jeremy","Orbitus","Don Swan","Smoke Admiral","Awakened Ice Admiral","Tide Keeper","Darkbeard","Cursed Captain","Order"}
-local BossList_W3 = {"Stone","Hydra Leader","Kilo Admiral","Captain Elephant","Beautiful Pirate","Cake Queen","Dough King","Longma","Soul Reaper","rip_indra True Form","Tyrant of the Skies"}
-if World1 then
-  BossList = BossList_W1
-elseif World2 then
-  BossList = BossList_W2
-elseif World3 then
-  BossList = BossList_W3
-else
-  -- fallback: gộp cả 3 sea nếu PlaceId lạ
-  BossList = {}
-  for _, n in ipairs(BossList_W1) do table.insert(BossList, n) end
-  for _, n in ipairs(BossList_W2) do table.insert(BossList, n) end
-  for _, n in ipairs(BossList_W3) do table.insert(BossList, n) end
+if World1 then BossList = {"The Gorilla King","Bobby","The Saw","Yeti","Mob Leader","Vice Admiral","Saber Expert","Warden","Chief Warden","Swan","Magma Admiral","Fishman Lord","Wysper","Thunder God","Cyborg","Ice Admiral","Greybeard"}
+elseif World2 then BossList = {"Diamond","Jeremy","Orbitus","Don Swan","Smoke Admiral","Awakened Ice Admiral","Tide Keeper","Darkbeard","Cursed Captain","Order"}
+elseif World3 then BossList = {"Stone","Hydra Leader","Kilo Admiral","Captain Elephant","Beautiful Pirate","Cake Queen","Dough King","Longma","Soul Reaper","rip_indra True Form","Tyrant of the Skies"}
 end
-print("[nyann os] BossList count =", #BossList, "World1/2/3 =", World1, World2, World3)
 if World1 then MaterialList = {"Leather + Scrap Metal", "Angel Wings", "Magma Ore", "Fish Tail"}
 elseif World2 then MaterialList = {"Leather + Scrap Metal", "Radioactive Material", "Ectoplasm", "Mystic Droplet", "Magma Ore", "Vampire Fang"}
 elseif World3 then MaterialList = {"Scrap Metal", "Demonic Wisp", "Conjured Cocoa", "Dragon Scale", "Gunpowder", "Fish Tail", "Mini Tusk"}
@@ -3908,30 +3894,14 @@ end)
 
 Tabs.Main:AddSection("Farm Boss")
 
-		do
-			-- copy list (tránh table rỗng / reference lỗi)
-			local bossOpts = {}
-			if type(BossList) == "table" then
-				for _, n in ipairs(BossList) do
-					table.insert(bossOpts, n)
-				end
-			end
-			if #bossOpts == 0 then
-				bossOpts = {"(no boss list — check PlaceId)"}
-			end
-			BossDropdown = Tabs.Main:AddDropdown({
-				Name = "Select Boss",
-				Description = "Boss theo sea hiện tại",
-				Options = bossOpts,
-				Default = bossOpts[1],
-				Callback = function(value)
-					if value and value ~= "(no boss list — check PlaceId)" then
-						_G.FindBoss = value
-					end
-				end
-			})
-			print("[nyann os] Boss dropdown options =", #bossOpts)
+		BossDropdown = Tabs.Main:AddDropdown({
+		Name = "Select Boss",
+		Description = "",
+		Options = BossList,
+		Callback = function(value)
+			_G.FindBoss = value
 		end
+		})
 
 FarmBoss = Tabs.Main:AddToggle({
     Name = "Auto Farm Boss",
