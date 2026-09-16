@@ -1446,83 +1446,19 @@ local function MakeTabShim(page)
 
     function tab:AddToggle(cfg)
         cfg = cfg or {}
-        local baseName = tostring(cfg.Name or cfg.Title or "Toggle")
-        local flag = cfg.Flag or baseName or ("Toggle_" .. tostring(os.clock()))
-        local def = cfg.Default == true
-        local userCb = cfg.Callback or function() end
-
-        local function label(on)
-            return baseName .. (on and "  [On]" or "  [Off]")
-        end
-
-        local function applyLabel(on)
-            pcall(function()
-                local t = (Toggles and Toggles[flag]) or (Library and Library.Toggles and Library.Toggles[flag])
-                if t then
-                    if typeof(t.SetText) == "function" then
-                        t:SetText(label(on))
-                    elseif typeof(t.SetValue) == "function" and t.Text ~= nil then
-                        t.Text = label(on)
-                    end
-                end
-            end)
-            -- fallback: update TextLabel that still shows old On/Off suffix
-            pcall(function()
-                local roots = {}
-                pcall(function() table.insert(roots, game:GetService("CoreGui")) end)
-                pcall(function()
-                    local pg = game.Players.LocalPlayer and game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-                    if pg then table.insert(roots, pg) end
-                end)
-                pcall(function() if gethui then table.insert(roots, gethui()) end end)
-                for _, root in ipairs(roots) do
-                    for _, d in ipairs(root:GetDescendants()) do
-                        if d:IsA("TextLabel") or d:IsA("TextButton") then
-                            local tx = tostring(d.Text or "")
-                            if tx == baseName or tx == baseName .. "  [On]" or tx == baseName .. "  [Off]"
-                                or tx:find(baseName, 1, true) == 1 then
-                                -- only exact base or our suffix pattern
-                                if tx == baseName or tx == baseName .. "  [On]" or tx == baseName .. "  [Off]" then
-                                    d.Text = label(on)
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-
-        local ret = ensureSection():AddToggle(
-            flag,
+        return ensureSection():AddToggle(
+            cfg.Flag or cfg.Name or cfg.Title or ("Toggle_" .. tostring(os.clock())),
             {
-                Text = label(def),
-                Default = def,
+                Text = cfg.Name or cfg.Title or "Toggle",
+                Default = cfg.Default == true,
                 Tooltip = cfg.Tooltip,
                 DisabledTooltip = cfg.DisabledTooltip,
                 Disabled = cfg.Disabled == true,
                 Visible = cfg.Visible ~= false,
                 Risky = false,
-                Callback = function(Value)
-                    applyLabel(Value == true)
-                    userCb(Value)
-                end
+                Callback = cfg.Callback or function() end
             }
         )
-
-        task.defer(function()
-            task.wait(0.05)
-            applyLabel(def)
-            pcall(function()
-                local t = (Toggles and Toggles[flag]) or (Library and Library.Toggles and Library.Toggles[flag])
-                if t and t.OnChanged then
-                    t:OnChanged(function()
-                        applyLabel(t.Value == true)
-                    end)
-                end
-            end)
-        end)
-
-        return ret
     end
 
     function tab:AddButton(cfg)
@@ -2115,16 +2051,6 @@ spawn(function()
         end)
     end
 end)
-Tabs.Main:AddDropdown({
-    Name = "UI Scale",
-    Options = {"Small", "Normal", "Big"},
-    Default = "Normal",
-    Callback = function(Value)
-        local scales = {Small = 0.8, Normal = 1.0, Big = 1.2}
-        Window:SetUIScale(scales[Value])
-    end
-})
-
 Tabs.Main:AddSection("Farming")
 
 FarmLevel = Tabs.Main:AddToggle({
