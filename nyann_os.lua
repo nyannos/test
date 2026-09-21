@@ -1032,8 +1032,8 @@ spawn(function()
     local Test = Instance.new("Highlight")
     Test.Name = "highlight"
     Test.Enabled = true
-    Test.FillColor = Color3.fromRGB(0,255,254)
-    Test.OutlineColor = Color3.fromRGB(0,255,254)
+    Test.FillColor = Color3.fromRGB(255,255,255)
+    Test.OutlineColor = Color3.fromRGB(255,255,255)
     Test.FillTransparency = 0.5
     Test.OutlineTransparency = 0.2
     Test.Parent = plr.Character
