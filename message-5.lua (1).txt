@@ -597,7 +597,7 @@ sea3 = (game.PlaceId == 7449423635 or game.PlaceId == 100117331123089)
 
 local Settings = {
     ["Tween Speed"] = 350,
-    ["Bypass Teleport"] = true,
+    ["Bypass Teleport"] = false,
     ["Up Y"] = false,
     ["Up Y When Low Health"] = false,
     ["Same Y"] = false
@@ -1315,7 +1315,7 @@ end
 
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
 local Window = redzlib:MakeWindow({
-    Title = "nyann os Version 4",
+    Title = "nyann os",
     SubTitle = "by real_@nyannnokonoko",
     SaveFolder = "nyannnaiget.json"
 })
@@ -1324,9 +1324,9 @@ local Minimizer = Window:NewMinimizer({
   KeyCode = Enum.KeyCode.LeftControl
 })
 
-local MobileButton = Minimizer:CreateMobileMinimizer({
-  Image = "rbxassetid://94678517792779",
-  BackgroundColor3 = Color3.fromRGB(0, 255, 254)
+Windows:AddMinimizeButton({
+  Button = { Image = "rbxassetid://94678517792779", BackgroundTransparency = 0 },
+  Corner = { CornerRadius = UDim.new(0, 6) }
 })
 
 local Tabs = {
