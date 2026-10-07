@@ -1338,80 +1338,72 @@ end
 -- ========================================
 -- XOVA UI (Black & White) + shim Tabs.* + Minimize
 -- ========================================
-print("[nyann os] loading Xova UI...")
-local Library
+print("[nyann os] loading UiREDzV2...")
 do
-  local ok, res = pcall(function()
-    local src = game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/Library.lua.txt")
-    if type(src) ~= "string" or #src < 1000 then error("empty") end
-    -- keep Xova native minimize (Pillow)
-    -- Patch pink accents -> white before load
-    src = src:gsub("Color3%.fromRGB%(255,%s*0,%s*127%)", "Color3.fromRGB(255, 255, 255)")
-    src = src:gsub("Color3%.fromRGB%(255,%s*0,%s*128%)", "Color3.fromRGB(255, 255, 255)")
-    src = src:gsub("Color3%.fromRGB%(75,%s*0,%s*38%)", "Color3.fromRGB(40, 40, 40)")
-    local fn, err = loadstring(src)
-    if not fn then error(err or "compile") end
-    return fn()
+  local ok, err = pcall(function()
+    loadstring(game:HttpGet(("https://raw.githubusercontent.com/daucobonhi/Ui-Redz-V2/refs/heads/main/UiREDzV2.lua")))()
   end)
-  if ok and res then
-    Library = res
-    print("[nyann os] Xova OK (B&W)")
-  else
-    error("[nyann os] Cannot load Xova Library: " .. tostring(res))
+  if not ok then
+    error("[nyann os] Cannot load UiREDzV2: " .. tostring(err))
   end
+  print("[nyann os] UiREDzV2 OK")
 end
 
-local function ForceBlackWhite(root)
-  pcall(function()
-    for _, obj in ipairs(root:GetDescendants()) do
-      for _, prop in ipairs({"BackgroundColor3", "TextColor3", "ImageColor3", "BorderColor3", "ScrollBarImageColor3"}) do
-        pcall(function()
-          local col = obj[prop]
-          if typeof(col) == "Color3" then
-            local r, g, b = col.R * 255, col.G * 255, col.B * 255
-            if (r > 200 and g < 80 and b > 80) or (r > 150 and g < 40 and b > 40) then
-              obj[prop] = Color3.fromRGB(255, 255, 255)
-            end
-          end
-        end)
-      end
-    end
-  end)
-end
-
-local RealWindow = Library:Window({
-  Title = "nyann os Version 3 by real_@nyannnokonoko",
-  SubTitle = "Version 3",
+-- Window
+MakeWindow({
+  Hub = {
+    Title = "nyann os-by real @nyannnokonoko",
+    Animation = "Script by @nyann",
+  },
+  Key = {
+    KeySystem = false,
+    Title = "Key System",
+    Description = "",
+    Keys = { "nyann" },
+    KeyLink = "",
+    Notifi = {
+      Notifications = false,
+      Incorrectkey = "Wrong key",
+      CorrectKey = "OK",
+      CopyKeyLink = "Copied",
+    },
+  },
 })
 
-task.defer(function()
-  task.wait(0.4)
-  pcall(function()
-    for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
-      ForceBlackWhite(gui)
-    end
-  end)
+-- Minimize (Redz native)
+pcall(function()
+  MinimizeButton({
+    Image = "http://www.roblox.com/asset/?id=94678517792779",
+    Size = {60, 60},
+    Color = Color3.fromRGB(10, 10, 10),
+    Corner = true,
+    Stroke = false,
+    StrokeColor = Color3.fromRGB(255, 0, 0)
+  })
 end)
 
--- Shim: map Tabs.* (redzlib style) -> Xova Page API
-local function MakeTabShim(page)
+-- Shim: Tabs.* API -> UiREDzV2 globals (AddToggle(parent, cfg), ...)
+local function MakeTabShim(container)
   local tab = {}
 
   function tab:AddSection(name)
-    if type(name) == "table" then name = name[1] or name.Name or "Section" end
+    if type(name) == "table" then
+      name = name[1] or name.Name or name.Title or "Section"
+    end
     name = tostring(name or "Section")
-    pcall(function() page:Section(name) end)
-    return page
+    pcall(function()
+      AddSection(container, { Name = name })
+    end)
+    return tab
   end
 
   function tab:AddToggle(cfg)
-    cfg = cfg or {}
+    cfg = type(cfg) == "table" and cfg or {}
     local ret
     pcall(function()
-      ret = page:Toggle({
-        Title = cfg.Name or cfg.Title or "Toggle",
-        Desc = cfg.Description or cfg.Desc or "",
-        Value = cfg.Default == true or cfg.Value == true,
+      ret = AddToggle(container, {
+        Name = cfg.Name or cfg.Title or "Toggle",
+        Default = cfg.Default == true or cfg.Value == true,
         Callback = cfg.Callback or function() end,
       })
     end)
@@ -1419,27 +1411,28 @@ local function MakeTabShim(page)
   end
 
   function tab:AddButton(cfg)
-    cfg = cfg or {}
-    local name = cfg.Name or cfg.Title or "Button"
+    cfg = type(cfg) == "table" and cfg or {}
     pcall(function()
-      page:Button({
-        Title = name,
-        Desc = cfg.Description or cfg.Desc or "",
-        Text = cfg.Text or name,
+      AddButton(container, {
+        Name = cfg.Name or cfg.Title or "Button",
         Callback = cfg.Callback or function() end,
       })
     end)
   end
 
   function tab:AddDropdown(cfg)
-    cfg = cfg or {}
+    cfg = type(cfg) == "table" and cfg or {}
     local opts = cfg.Options or cfg.Values or cfg.List or cfg.Items or {}
+    if type(opts) ~= "table" then opts = {} end
+    local def = cfg.Default or cfg.Value
+    if type(def) == "number" and opts[def] then def = opts[def] end
+    if def == nil and opts[1] then def = opts[1] end
     local ret
     pcall(function()
-      ret = page:Dropdown({
-        Title = cfg.Name or cfg.Title or "Dropdown",
-        List = opts,
-        Value = cfg.Default or cfg.Value,
+      ret = AddDropdown(container, {
+        Name = cfg.Name or cfg.Title or "Dropdown",
+        Options = opts,
+        Default = def or "",
         Callback = cfg.Callback or function() end,
       })
     end)
@@ -1447,15 +1440,20 @@ local function MakeTabShim(page)
   end
 
   function tab:AddSlider(cfg)
-    cfg = cfg or {}
+    cfg = type(cfg) == "table" and cfg or {}
+    local minv = tonumber(cfg.Min or cfg.MinValue) or 0
+    local maxv = tonumber(cfg.Max or cfg.MaxValue) or 100
+    local def = tonumber(cfg.Default or cfg.Value) or minv
+    local inc = tonumber(cfg.Increase or cfg.Increment or cfg.Rounding) or 1
+    if inc <= 0 then inc = 1 end
     local ret
     pcall(function()
-      ret = page:Slider({
-        Title = cfg.Name or cfg.Title or "Slider",
-        Min = cfg.Min or 0,
-        Max = cfg.Max or 100,
-        Rounding = cfg.Rounding or 1,
-        Value = cfg.Default or cfg.Value or 0,
+      ret = AddSlider(container, {
+        Name = cfg.Name or cfg.Title or "Slider",
+        MinValue = minv,
+        MaxValue = maxv,
+        Default = def,
+        Increase = inc,
         Callback = cfg.Callback or function() end,
       })
     end)
@@ -1465,43 +1463,61 @@ local function MakeTabShim(page)
   function tab:AddParagraph(a, b)
     local title = tostring(a or "")
     local desc = (b ~= nil) and tostring(b) or ""
+    if type(a) == "table" then
+      title = tostring(a.Title or a.Name or a[1] or "")
+      desc = tostring(a.Text or a.Desc or a.Description or a[2] or desc)
+    end
     local proxy = {
       _title = title,
       _desc = desc,
-      Set = function(self, t)
-        self._title = tostring(t or "")
-      end,
-      SetDesc = function(self, d)
-        self._desc = tostring(d or "")
-      end,
+      Set = function(self, t) self._title = tostring(t or "") end,
+      SetDesc = function(self, d) self._desc = tostring(d or "") end,
       SetDescription = function(self, d) self:SetDesc(d) end,
     }
     pcall(function()
-      page:Paragraph({
-        Title = title,
-        Desc = desc,
-      })
+      local p = AddParagraph(container, { Title = title, Text = desc })
+      if type(p) == "table" then
+        proxy._raw = p
+        function proxy:Set(t)
+          self._title = tostring(t or "")
+          pcall(function() if p[1] then p[1].Text = self._title end end)
+        end
+        function proxy:SetDesc(d)
+          self._desc = tostring(d or "")
+          pcall(function() if p[2] then p[2].Text = self._desc end end)
+        end
+        function proxy:SetDescription(d) self:SetDesc(d) end
+      end
     end)
     return proxy
   end
 
   function tab:AddTextBox(cfg)
-    cfg = cfg or {}
+    cfg = type(cfg) == "table" and cfg or {}
     pcall(function()
-      page:Input({
-        Value = cfg.Default or cfg.Value or cfg.Placeholder or "",
+      AddTextBox(container, {
+        Name = cfg.Name or cfg.Title or "TextBox",
+        Default = cfg.Default or cfg.Value or cfg.Placeholder or "",
+        PlaceholderText = cfg.Placeholder or "",
         Callback = cfg.Callback or function() end,
       })
     end)
   end
 
   function tab:AddDiscordInvite(cfg)
-    cfg = cfg or {}
+    cfg = type(cfg) == "table" and cfg or {}
+    local title = tostring(cfg.Title or cfg.Name or "Discord")
+    local invite = tostring(cfg.Invite or cfg.Link or "")
     pcall(function()
-      page:Paragraph({
-        Title = tostring(cfg.Title or "Discord"),
-        Desc = tostring(cfg.Description or "") .. (cfg.Invite and ("\n" .. tostring(cfg.Invite)) or ""),
+      AddButton(container, {
+        Name = "Copy: " .. title,
+        Callback = function()
+          pcall(function()
+            if setclipboard then setclipboard(invite) end
+          end)
+        end,
       })
+      AddParagraph(container, { Title = title, Text = invite })
     end)
   end
 
@@ -1509,59 +1525,32 @@ local function MakeTabShim(page)
 end
 
 local Window = {}
-local MenuVisible = true
-
 function Window:MakeTab(cfg)
-  cfg = cfg or {}
+  cfg = type(cfg) == "table" and cfg or {}
   local title = cfg.Title or cfg.Name or "Tab"
-  local icon = cfg.Icon
-  -- Xova Icon expects number asset id sometimes
-  local iconId = 127194456372995
-  if type(icon) == "number" then
-    iconId = icon
-  elseif type(icon) == "string" then
-    local n = tonumber((icon:gsub("rbxassetid://", "")))
-    if n then iconId = n end
-  end
-  local page
+  if type(cfg) == "table" and cfg[1] then title = cfg[1] end
+  local container
   local ok, res = pcall(function()
-    return RealWindow:NewPage({
-      Title = tostring(title),
-      Desc = tostring(title),
-      Icon = iconId,
-    })
+    return MakeTab({ Name = tostring(title) })
   end)
-  if ok then page = res end
-  if not page then
-    warn("[nyann os] Page fail:", title, res)
-    return MakeTabShim({ Section = function() end, Toggle = function() end, Button = function() end })
+  if ok then container = res end
+  if not container then
+    warn("[nyann os] MakeTab failed: " .. tostring(title))
+    return MakeTabShim({}) -- empty stub
   end
-  print("[nyann os] Tab:", title)
-  return MakeTabShim(page)
+  return MakeTabShim(container)
 end
 
 function Window:Notify(opts)
-  opts = opts or {}
-  local title = tostring(opts.Title or "nyann os")
-  local msg = tostring(opts.Content or opts.Message or "")
-  if getgenv().NyannAlurt and getgenv().NyannAlurt.CreateNode then
-    pcall(function()
-      getgenv().NyannAlurt.CreateNode({
-        Title = title,
-        Content = msg,
-        Length = opts.Duration or 4,
-        Image = "rbxassetid://17616650704",
-        BarColor = Color3.fromRGB(255, 255, 255),
-      })
-    end)
-    return
-  end
+  opts = type(opts) == "table" and opts or { Title = tostring(opts) }
   pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-      Title = title,
-      Text = msg,
-      Duration = opts.Duration or 4,
-    })
+    if MakeNotifi then
+      MakeNotifi({
+        Title = tostring(opts.Title or "nyann os"),
+        Description = tostring(opts.Content or opts.Description or opts.Text or ""),
+        Time = opts.Duration or opts.Time or 3,
+      })
+    end
   end)
 end
 
@@ -1572,65 +1561,15 @@ function Window:SetUIScale() end
 function Window:SelectTab() end
 
 local redzlib = {
-  Notify = function(_, opts) Window:Notify(opts) end
+  Notify = function(_, opts) Window:Notify(opts) end,
 }
 
--- Toggle menu visibility (hide/show Xova window frames)
-local function ToggleXovaMenu(force)
-  if force ~= nil then
-    MenuVisible = force
-  else
-    MenuVisible = not MenuVisible
-  end
-  pcall(function()
-    local core = game:GetService("CoreGui")
-    for _, gui in ipairs(core:GetChildren()) do
-      -- try detect Xova screen gui frames
-      if gui:IsA("ScreenGui") and gui.Name ~= "NyannMinimizeIcon" then
-        local hasBg = false
-        for _, d in ipairs(gui:GetDescendants()) do
-          if d.Name == "Background" and d:IsA("Frame") then
-            hasBg = true
-            break
-          end
-        end
-        if hasBg or (gui:FindFirstChildWhichIsA("Frame") and gui.Name ~= "NyannMinimizeIcon") then
-          -- only toggle likely menu guis created recently
-          pcall(function()
-            for _, d in ipairs(gui:GetDescendants()) do
-              if d:IsA("Frame") and d.Name == "Background" then
-                d.Visible = MenuVisible
-              end
-            end
-            gui.Enabled = MenuVisible
-          end)
-        end
-      end
-    end
-  end)
-end
-getgenv().NyannToggleMenu = ToggleXovaMenu
+getgenv().NyannToggleMenu = function() end
+
+print("[nyann os] UiREDzV2 menu ready")
 
 
 
-
--- Chỉ giữ minimize Xova — xoá mọi minimize custom
-pcall(function()
-  local function wipe(parent)
-    if not parent then return end
-    for _, v in ipairs(parent:GetChildren()) do
-      local n = tostring(v.Name):lower()
-      if n == "nyannminimizeicon" or n:find("nyannmin") or n == "minimizebtn" then
-        pcall(function() v:Destroy() end)
-      end
-    end
-  end
-  wipe(game:GetService("CoreGui"))
-  local pg = game.Players.LocalPlayer and game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-  wipe(pg)
-end)
-
-print("[nyann os] Xova menu ready (minimize Xova only)")
 
 local Tabs = {
     Info = Window:MakeTab({ Title = "Info And Status", Icon = "" }),
