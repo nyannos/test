@@ -2,7 +2,7 @@ local n
 n = 140455651
 loadstring(
   game:HttpGet(
-    "https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"
+    "https://raw.githubusercontent.com/scriptpastebin/Blox-Fruits/refs/heads/main/core.luau"
   )
 )()
 local n2
@@ -45,19 +45,6 @@ tbl = {
   Shop = v:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
   Misc = v:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" }),
 }
-
-tbl.Info:AddSection("Information")
-Tabs.Info:AddSection("Information")
-
-Tabs.Info:AddDiscordInvite({
-	Title = "Nyann | Community🇻🇳👑",
-	Description = "Sever discord.",
-	Banner = "rbxassetid://94678517792779", 
-	Logo = "rbxassetid://94678517792779",
-	Invite = "https://discord.gg/k6MRH4KxTv",
-	Members = 36, 
-	Online = 67, 
-})
 
 tbl.Info:AddSection("Status Server")
 local n4
@@ -14483,4 +14470,69 @@ v:Notify({
   Image = "rbxassetid://94678517792779",
   Duration = 5,
 })
+
+-- NYANN OS | COPY LINK ONLY
+
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local DiscordLink = "https://discord.gg/DrHuRgrsVG"
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NyannCopyLink"
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 999
+
+local ok = pcall(function()
+    gui.Parent = game:GetService("CoreGui")
+end)
+
+if not ok then
+    gui.Parent = player:WaitForChild("PlayerGui")
+end
+
+-- COPY BUTTON
+local copy = Instance.new("TextButton")
+copy.Name = "CopyLink"
+copy.Size = UDim2.new(0, 150, 0, 35)
+copy.Position = UDim2.new(0.5, -75, 0, 15)
+copy.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+copy.Text = "COPY LINK"
+copy.TextColor3 = Color3.fromRGB(255, 255, 255)
+copy.TextSize = 13
+copy.Font = Enum.Font.GothamBold
+copy.BorderSizePixel = 0
+copy.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 7)
+corner.Parent = copy
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Transparency = 0.4
+stroke.Thickness = 1
+stroke.Parent = copy
+
+-- COPY FUNCTION
+copy.MouseButton1Click:Connect(function()
+    if typeof(setclipboard) == "function" then
+        local success = pcall(setclipboard, DiscordLink)
+
+        if success then
+            copy.Text = "COPIED!"
+        else
+            copy.Text = "FAILED"
+        end
+    else
+        copy.Text = "NOT SUPPORTED"
+    end
+
+    task.wait(1.5)
+
+    if copy.Parent then
+        copy.Text = "COPY LINK"
+    end
+end)
+
 -- [[ leaked by YzZ ]]
