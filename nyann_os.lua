@@ -1,4 +1,5 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/fps"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/nyanndzvkl/fixlag/refs/heads/main/nyannfixlag.lua"))()
 -- Gavz farm engine (Auto Farm Level / shared _G flags)
 pcall(function()
   loadstring(game:HttpGet(
@@ -1037,21 +1038,50 @@ spawn(function()
           Noclip.MaxForce = Vector3.new(100000,100000,100000)
           Noclip.Velocity = Vector3.new(0,0,0)
         end        
-      if not plr.Character:FindFirstChild("highlight") then
-    local Test = Instance.new("Highlight")
-    Test.Name = "highlight"
-    Test.Enabled = true
-    Test.FillColor = Color3.fromRGB(255,255,255)
-    Test.OutlineColor = Color3.fromRGB(255,255,255)
-    Test.FillTransparency = 0.5
-    Test.OutlineTransparency = 0.2
-    Test.Parent = plr.Character
-end
+      -- Hào quang farm: luôn TRẮNG (không xanh lá)
+      do
+        local ch = plr.Character
+        if ch then
+          local Test = ch:FindFirstChild("highlight")
+          if not Test then
+            Test = Instance.new("Highlight")
+            Test.Name = "highlight"
+            Test.Parent = ch
+          end
+          Test.Enabled = true
+          Test.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+          Test.FillColor = Color3.fromRGB(255, 255, 255)
+          Test.OutlineColor = Color3.fromRGB(255, 255, 255)
+          Test.FillTransparency = 0.45
+          Test.OutlineTransparency = 0
+        end
+      end
         for _, no in pairs(plr.Character:GetDescendants()) do if no:IsA("BasePart") then no.CanCollide = false end end
       else
         shouldTween = false
         if plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then plr.Character.HumanoidRootPart:FindFirstChild("BodyClip"):Destroy() end
-        if plr.Character:FindFirstChild('highlight') then plr.Character:FindFirstChild('highlight'):Destroy() end	        
+        if plr.Character:FindFirstChild('highlight') then plr.Character:FindFirstChild('highlight'):Destroy() end
+
+-- Re-apply white farm highlight khi respawn
+pcall(function()
+  plr.CharacterAdded:Connect(function(char)
+    task.wait(0.5)
+    if getgenv().OnFarm or _G.Level or _G.AutoFarm_Bone then
+      local Test = char:FindFirstChild("highlight")
+      if not Test then
+        Test = Instance.new("Highlight")
+        Test.Name = "highlight"
+        Test.Parent = char
+      end
+      Test.FillColor = Color3.fromRGB(255, 255, 255)
+      Test.OutlineColor = Color3.fromRGB(255, 255, 255)
+      Test.FillTransparency = 0.45
+      Test.OutlineTransparency = 0
+      Test.Enabled = true
+    end
+  end)
+end)
+	        
       end
     end)
   end
@@ -9846,17 +9876,31 @@ pcall(function()
 end)
 
 
+-- Auto Random Fruit (từ Gavz Hub · Cousin Buy + cooldown)
 RandomFF = Tabs.Raids:AddToggle({
-Name = "Auto Random Fruit", 
-Description = "", 
-Default = false,
-Callback = function(Value)
-  _G.Random_Auto = Value
-end})
-spawn(function()
-  while wait(Sec) do
-   	pcall(function()
-      if _G.Random_Auto then replicated.Remotes.CommF_:InvokeServer("Cousin","Buy") end 
+  Name = "Auto Random Fruit",
+  Description = "Gavz · Cousin random buy",
+  Default = false,
+  Callback = function(Value)
+    _G.Random_Auto = Value
+    _G.RandomFruitCooldown = nil
+  end,
+})
+task.spawn(function()
+  while task.wait(0.5) do
+    pcall(function()
+      if not _G.Random_Auto then
+        return
+      end
+      -- cooldown tránh spam remote
+      if _G.RandomFruitCooldown and (tick() - _G.RandomFruitCooldown) < 1.5 then
+        return
+      end
+      local rem = replicated:FindFirstChild("Remotes")
+      if rem and rem:FindFirstChild("CommF_") then
+        rem.CommF_:InvokeServer("Cousin", "Buy")
+        _G.RandomFruitCooldown = tick()
+      end
     end)
   end
 end)
