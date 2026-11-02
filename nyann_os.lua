@@ -1,5 +1,4 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/fps"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/nyanndzvkl/fixlag/refs/heads/main/nyannfixlag.lua"))()
 -- Gavz farm engine (Auto Farm Level / shared _G flags)
 pcall(function()
   loadstring(game:HttpGet(
