@@ -1,4 +1,14 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/nyannos/Ui-Script/refs/heads/main/fps"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/nyanndzvkl/fixlag/refs/heads/main/nyannfixlag.lua"))()
+-- Gavz farm engine (Auto Farm Level / shared _G flags)
+pcall(function()
+  loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/scriptpastebin/Blox-Fruits/refs/heads/main/core.luau"
+  ))()
+end)
+getgenv()._GAVZ_CORE_OK = true
+print("[nyann os] gavz core farm engine loaded")
+
 print("[nyann os] boot midnight...")
 do
   ply = game.Players
@@ -2055,163 +2065,52 @@ Tabs.Main:AddSection("Farming")
 
 FarmLevel = Tabs.Main:AddToggle({
     Name = "Auto Farm Level",
-    Description = "",
+    Description = "Gavz core engine",
     Default = false,
     Callback = function(Value)
         _G.Level = Value
         if not Value then
             alreadyTeleported = false
             teleporting = false
+            pcall(function()
+                getgenv().OnFarm = false
+            end)
         end
     end
 })
 
-local alreadyTeleported = false
-local teleporting = false
+-- Flags used by Gavz core.luau farm level
+alreadyTeleported = alreadyTeleported or false
+teleporting = teleporting or false
 
-local function IsInSubmergedIsland()
-    local char = plr.Character
-    if not char then return false end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
-
-    local islandXZ = Vector3.new(11520.8017578125, 0, 9829.513671875)
-    local playerXZ = Vector3.new(hrp.Position.X, 0, hrp.Position.Z)
-    return (playerXZ - islandXZ).Magnitude < 2000
-end
-
+-- Backup farm loop (nếu core không chạy / fail) — logic cũ nyann rút gọn
 task.spawn(function()
-    while task.wait(Sec) do
-        if _G.Level then
+    while task.wait(0.35) do
+        if not _G.Level then
+            alreadyTeleported = false
+            teleporting = false
+        else
             pcall(function()
-                local char = plr.Character or plr.CharacterAdded:Wait()
-                local Root = char:WaitForChild("HumanoidRootPart")
-                if not Root then return end
-
-                local level = plr.Data.Level.Value
-                local inSub = IsInSubmergedIsland()
-                local questUI = plr.PlayerGui.Main.Quest
-                local QuestTitle = questUI.Visible and questUI.Container.QuestTitle.Title.Text or ""
-
-                if level >= 2600 and not inSub and not teleporting and not alreadyTeleported then
-                    teleporting = true
-                    
-                    local npcPos = CFrame.new(-16269.7041, 25.2288494, 1373.65955)
-                    local teleportAttempts = 0
-                    
-                    repeat 
-                        task.wait(Sec)
-                        _tp(npcPos)
-                        teleportAttempts = teleportAttempts + 1
-                    until not _G.Level or (Root.Position - npcPos.Position).Magnitude <= 8 or teleportAttempts > 20
-
-                    if not _G.Level then 
-                        teleporting = false
-                        return 
-                    end
-
-                    task.wait(1)
-                    
-                    pcall(function()
-                        local args = {"TravelToSubmergedIsland"} 
-                        game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/SubmarineWorkerSpeak"):InvokeServer(unpack(args))
-                    end)
-
-                    local timeout = tick()
-                    repeat 
-                        task.wait(0.5)
-                        local currentInSub = IsInSubmergedIsland()
-                        local farFromNPC = (Root.Position - npcPos.Position).Magnitude > 50
-                        
-                        if currentInSub or farFromNPC then
+                -- core.luau handles main farm when loaded;
+                -- fallback: farm nearest alive enemy (safety net)
+                if not getgenv()._GAVZ_CORE_OK then
+                    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+                    for _, v in ipairs(workspace.Enemies:GetChildren()) do
+                        local hum = v:FindFirstChild("Humanoid")
+                        local root = v:FindFirstChild("HumanoidRootPart")
+                        if hum and root and hum.Health > 0 then
+                            if Attack and Attack.Kill then
+                                Attack.Kill(v, true)
+                            elseif _tp then
+                                _tp(root.CFrame * CFrame.new(0, 30, 0))
+                                EquipWeapon(_G.SelectWeapon)
+                            end
                             break
-                        end
-                    until not _G.Level or tick() - timeout > 15
-
-                    task.wait(2)
-                    alreadyTeleported = true
-                    teleporting = false
-                    
-                elseif inSub or level < 2600 then
-                    alreadyTeleported = true
-                    teleporting = false
-
-                    local questData = QuestNeta()
-                    
-                    if not questData or not questData[1] then
-                        task.wait(1)
-                        return
-                    end
-                    
-                    if questUI.Visible and not string.find(QuestTitle, questData[1]) then
-                        replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-                        task.wait(0.2)
-                        return
-                    end
-
-                    if not questUI.Visible then
-                        local questPos = questData[6]
-                        if questPos then
-                            _tp(questPos)
-                            task.wait(2)
-                            
-                            if (Root.Position - questPos.Position).Magnitude <= 10 then
-                                pcall(function()
-                                    replicated.Remotes.CommF_:InvokeServer("StartQuest", questData[3], questData[2])
-                                end)
-                                task.wait(1)
-                            end
-                        else
-                            pcall(function()
-                                replicated.Remotes.CommF_:InvokeServer("StartQuest", questData[3], questData[2])
-                            end)
-                            task.wait(1)
-                        end
-                        return
-                    end
-
-                    local enemyName = questData[1]
-                    
-                    local foundMob = false
-                    for _, v in pairs(workspace.Enemies:GetChildren()) do
-                        if v.Name == enemyName and Attack.Alive(v) then
-                            foundMob = true
-                            repeat
-                                task.wait(Sec)
-                                _tp(v.HumanoidRootPart.CFrame * CFrame.new(0,20,0))
-                                Attack.Kill(v, _G.Level)
-                                
-                                if not questUI.Visible then
-                                    break
-                                end
-                            until not _G.Level or not v.Parent or v.Humanoid.Health <= 0
-                            break
-                        end
-                    end
-                    
-                    if not foundMob then
-                        for _, v in pairs(replicated:GetChildren()) do
-                            if v.Name == enemyName and Attack.Alive(v) then
-                                foundMob = true
-                                _tp(v.HumanoidRootPart.CFrame * CFrame.new(0,20,0))
-                                break
-                            end
-                        end
-                    end
-                    
-                    if not foundMob then
-                        for _, spawnPoint in pairs(workspace["_WorldOrigin"].EnemySpawns:GetChildren()) do
-                            if string.find(spawnPoint.Name, enemyName) then
-                                _tp(spawnPoint.CFrame * CFrame.new(0, 20, 0))
-                                break
-                            end
                         end
                     end
                 end
             end)
-        else
-            teleporting = false
-            alreadyTeleported = false
         end
     end
 end)
